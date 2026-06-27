@@ -1,31 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, RotateCcw, Save } from "lucide-react";
+import { Check, Eye, EyeOff, RotateCcw, Save, Sparkles } from "lucide-react";
 import {
-  AgencySettings,
+  AI_MODELS,
+  CrmSettings,
   DEFAULT_SETTINGS,
+  isAiActive,
   loadSettings,
   saveSettings,
 } from "@/lib/settings";
+import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<AgencySettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<CrmSettings>(DEFAULT_SETTINGS);
   const [saved, setSaved] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const [showKey, setShowKey] = useState(false);
 
   useEffect(() => {
     setSettings(loadSettings());
-    setHydrated(true);
   }, []);
 
-  function update<K extends keyof AgencySettings>(
+  function update<K extends keyof CrmSettings>(
     key: K,
-    value: AgencySettings[K]
+    value: CrmSettings[K]
   ) {
     setSettings((s) => ({ ...s, [key]: value }));
     setSaved(false);
@@ -43,220 +53,271 @@ export default function SettingsPage() {
     setSaved(false);
   }
 
-  const neighborhoods = settings.featuredNeighborhoods
-    .split(",")
-    .map((n) => n.trim())
-    .filter(Boolean);
+  const aiActive = isAiActive(settings);
 
   return (
-    <div className="container py-12">
-      <div className="mb-8">
-        <p className="text-xs uppercase tracking-[0.3em] text-gold-dark">
-          White-Label Template
-        </p>
-        <h1 className="mt-2 font-serif text-4xl text-charcoal">
-          Agency Settings
-        </h1>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-          Personalize this template for your brand. Settings are saved to your
-          browser&apos;s local storage and power the live preview below.
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title="Settings"
+        subtitle="Customize your CRM template and integrations"
+      >
+        <Button onClick={onSave} variant="gold">
+          {saved ? (
+            <>
+              <Check className="h-4 w-4" /> Saved
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" /> Save Changes
+            </>
+          )}
+        </Button>
+      </PageHeader>
 
-      <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
-        {/* Form */}
-        <Card>
-          <CardContent className="space-y-5 p-6">
-            <div>
-              <Label htmlFor="agencyName">Agency Name</Label>
-              <Input
-                id="agencyName"
-                className="mt-2"
-                value={settings.agencyName}
-                onChange={(e) => update("agencyName", e.target.value)}
-              />
-            </div>
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="space-y-6">
+          {/* Company */}
+          <Card>
+            <CardContent className="space-y-5 p-6">
+              <h2 className="font-serif text-lg text-charcoal">
+                Company Profile
+              </h2>
 
-            <div>
-              <Label htmlFor="primaryColor">Primary / Accent Color</Label>
-              <div className="mt-2 flex items-center gap-3">
-                <input
-                  id="primaryColor"
-                  type="color"
-                  value={settings.primaryColor}
-                  onChange={(e) => update("primaryColor", e.target.value)}
-                  className="h-11 w-14 cursor-pointer rounded-md border border-input bg-card"
-                />
-                <Input
-                  value={settings.primaryColor}
-                  onChange={(e) => update("primaryColor", e.target.value)}
-                  className="font-mono"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
               <div>
-                <Label htmlFor="agentName">Agent Name</Label>
+                <Label htmlFor="companyName">Company Name</Label>
                 <Input
-                  id="agentName"
+                  id="companyName"
                   className="mt-2"
-                  value={settings.agentName}
-                  onChange={(e) => update("agentName", e.target.value)}
+                  value={settings.companyName}
+                  onChange={(e) => update("companyName", e.target.value)}
                 />
               </div>
+
               <div>
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="logoUrl">Logo URL</Label>
                 <Input
-                  id="phone"
+                  id="logoUrl"
                   className="mt-2"
-                  value={settings.phone}
-                  onChange={(e) => update("phone", e.target.value)}
+                  placeholder="https://…"
+                  value={settings.logoUrl}
+                  onChange={(e) => update("logoUrl", e.target.value)}
                 />
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="agentPhoto">Agent Photo URL</Label>
-              <Input
-                id="agentPhoto"
-                className="mt-2"
-                placeholder="https://…"
-                value={settings.agentPhoto}
-                onChange={(e) => update("agentPhoto", e.target.value)}
-              />
-            </div>
+              <div>
+                <Label htmlFor="address">Office Address</Label>
+                <Input
+                  id="address"
+                  className="mt-2"
+                  value={settings.address}
+                  onChange={(e) => update("address", e.target.value)}
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="officeAddress">Office Address</Label>
-              <Input
-                id="officeAddress"
-                className="mt-2"
-                value={settings.officeAddress}
-                onChange={(e) => update("officeAddress", e.target.value)}
-              />
-            </div>
+              <div>
+                <Label htmlFor="primaryColor">Color Theme (Accent)</Label>
+                <div className="mt-2 flex items-center gap-3">
+                  <input
+                    id="primaryColor"
+                    type="color"
+                    value={settings.primaryColor}
+                    onChange={(e) => update("primaryColor", e.target.value)}
+                    className="h-11 w-14 cursor-pointer rounded-md border border-input bg-card"
+                  />
+                  <Input
+                    value={settings.primaryColor}
+                    onChange={(e) => update("primaryColor", e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <Label htmlFor="featuredNeighborhoods">
-                Featured Neighborhoods (comma separated)
-              </Label>
-              <Input
-                id="featuredNeighborhoods"
-                className="mt-2"
-                value={settings.featuredNeighborhoods}
-                onChange={(e) =>
-                  update("featuredNeighborhoods", e.target.value)
-                }
-              />
-            </div>
+              <div>
+                <Label htmlFor="managers">
+                  Property Managers (comma separated)
+                </Label>
+                <Input
+                  id="managers"
+                  className="mt-2"
+                  value={settings.managers}
+                  onChange={(e) => update("managers", e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button onClick={onSave} variant="gold">
-                {saved ? (
-                  <>
-                    <Check className="h-4 w-4" /> Saved
-                  </>
+          {/* AI Integration */}
+          <Card>
+            <CardContent className="space-y-5 p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-gold-dark" />
+                  <h2 className="font-serif text-lg text-charcoal">
+                    AI Integration
+                  </h2>
+                </div>
+                {aiActive ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    Active
+                  </span>
                 ) : (
-                  <>
-                    <Save className="h-4 w-4" /> Save Settings
-                  </>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                    Inactive
+                  </span>
                 )}
-              </Button>
-              <Button onClick={onReset} variant="ghost">
+              </div>
+
+              <div>
+                <Label htmlFor="apiKey">Anthropic API Key</Label>
+                <div className="relative mt-2">
+                  <Input
+                    id="apiKey"
+                    type={showKey ? "text" : "password"}
+                    placeholder="sk-ant-…"
+                    className="pr-10 font-mono"
+                    value={settings.apiKey}
+                    onChange={(e) => update("apiKey", e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKey((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-charcoal"
+                    aria-label={showKey ? "Hide key" : "Show key"}
+                  >
+                    {showKey ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Your key is stored locally and never sent to our servers. Get
+                  a key at{" "}
+                  <a
+                    href="https://console.anthropic.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-gold-dark underline"
+                  >
+                    console.anthropic.com
+                  </a>
+                  .
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="aiModel">AI Model</Label>
+                <Select
+                  value={settings.aiModel}
+                  onValueChange={(v) => update("aiModel", v)}
+                >
+                  <SelectTrigger id="aiModel" className="mt-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AI_MODELS.map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between rounded-md border border-border bg-secondary/40 px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-charcoal">
+                    Enable AI Assistant
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Show the assistant as active across the CRM.
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.aiEnabled}
+                  onCheckedChange={(v) => update("aiEnabled", v)}
+                />
+              </div>
+
+              <Button onClick={onReset} variant="ghost" size="sm">
                 <RotateCcw className="h-4 w-4" /> Reset to Defaults
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Live preview */}
         <div>
           <p className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">
-            Live Preview
+            Brand Preview
           </p>
           <Card className="overflow-hidden">
             <div
-              className="h-28"
+              className="h-24"
               style={{
                 background: `linear-gradient(135deg, ${settings.primaryColor}, #1a1a1a)`,
               }}
             />
             <CardContent className="p-6">
-              <div className="-mt-14 flex items-end gap-4">
+              <div className="-mt-12 flex items-end">
                 <div
-                  className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-4 border-card bg-secondary text-2xl font-serif text-charcoal"
+                  className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border-4 border-card bg-secondary font-serif text-xl text-charcoal"
                   style={{
-                    backgroundImage: settings.agentPhoto
-                      ? `url(${settings.agentPhoto})`
+                    backgroundImage: settings.logoUrl
+                      ? `url(${settings.logoUrl})`
                       : undefined,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }}
                 >
-                  {!settings.agentPhoto &&
-                    (settings.agentName?.[0]?.toUpperCase() ?? "A")}
+                  {!settings.logoUrl &&
+                    (settings.companyName?.[0]?.toUpperCase() ?? "P")}
                 </div>
               </div>
 
-              <h2 className="mt-4 font-serif text-2xl text-charcoal">
-                {settings.agencyName || "Your Agency"}
-              </h2>
-              <p
-                className="text-sm font-medium"
-                style={{ color: settings.primaryColor }}
-              >
-                {settings.agentName || "Agent Name"}
+              <h3 className="mt-4 font-serif text-xl text-charcoal">
+                {settings.companyName || "Your Company"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {settings.address || "—"}
               </p>
-
-              <dl className="mt-4 space-y-1.5 text-sm text-charcoal/80">
-                <div className="flex gap-2">
-                  <dt className="text-muted-foreground">Office:</dt>
-                  <dd>{settings.officeAddress || "—"}</dd>
-                </div>
-                <div className="flex gap-2">
-                  <dt className="text-muted-foreground">Phone:</dt>
-                  <dd>{settings.phone || "—"}</dd>
-                </div>
-              </dl>
 
               <div className="mt-5">
                 <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
-                  Featured Neighborhoods
+                  Property Managers
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {neighborhoods.length > 0 ? (
-                    neighborhoods.map((n) => (
+                  {settings.managers
+                    .split(",")
+                    .map((m) => m.trim())
+                    .filter(Boolean)
+                    .map((m) => (
                       <span
-                        key={n}
-                        className="rounded-full px-3 py-1 text-xs"
+                        key={m}
+                        className="rounded-full px-2.5 py-1 text-xs"
                         style={{
                           backgroundColor: `${settings.primaryColor}22`,
                           color: settings.primaryColor,
                         }}
                       >
-                        {n}
+                        {m}
                       </span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-muted-foreground">—</span>
-                  )}
+                    ))}
                 </div>
               </div>
 
               <button
-                className="mt-6 w-full rounded-md py-3 text-sm font-medium uppercase tracking-wider text-white transition-opacity hover:opacity-90"
+                className="mt-6 w-full rounded-md py-2.5 text-sm font-medium uppercase tracking-wider text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: settings.primaryColor }}
               >
-                Contact {settings.agentName?.split(" ")[0] || "Us"}
+                Accent Button
               </button>
             </CardContent>
           </Card>
-          {!hydrated && (
-            <p className="mt-3 text-xs text-muted-foreground">Loading…</p>
-          )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

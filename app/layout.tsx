@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
-import { ChatWidget } from "@/components/chat-widget";
+import { Sidebar } from "@/components/sidebar";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const sans = Inter({
   subsets: ["latin"],
@@ -18,9 +17,9 @@ const serif = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Prestige Properties · Find Your Perfect Home with AI",
+  title: "Prestige Properties · Property Management CRM",
   description:
-    "Luxury real estate, intelligently guided. Browse curated homes, calculate your mortgage, and chat with Alex, our AI property advisor.",
+    "A professional property-management CRM: properties, tenants, vacancies, financials, and maintenance in one dashboard.",
 };
 
 export default function RootLayout({
@@ -30,11 +29,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
-      <body className="flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <ChatWidget />
+      <body className="bg-background font-sans antialiased">
+        <ThemeProvider />
+        <Sidebar />
+        <div className="lg:pl-64">
+          <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );
