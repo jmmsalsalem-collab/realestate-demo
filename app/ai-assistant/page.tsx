@@ -31,17 +31,50 @@ const noiQuarter = properties.reduce((s, p) => s + propertyFinancials(p, 3).noi,
 const noiLastQuarter = Math.round(noiQuarter * 0.94);
 const noiDeltaPct = ((noiQuarter - noiLastQuarter) / noiLastQuarter) * 100;
 
+interface ChatMsg {
+  role: "user" | "assistant";
+  text: string;
+}
+
 export default function AiAssistantPage() {
   const { t, lang } = useI18n();
   const { settings, hydrated } = useSettings();
   const active = hydrated && isAiActive(settings);
-  const [asked, setAsked] = useState<string[]>([]);
+  const [convo, setConvo] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function risk(status: string) {
     if (status === "Notice Given") return { label: t("risk_high"), tone: "text-red-600" };
     if (status === "Late") return { label: t("risk_elevated"), tone: "text-amber-700" };
     return { label: t("risk_low"), tone: "text-emerald-700" };
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const q = input.trim();
+    if (!q || loading) return;
+    const next: ChatMsg[] = [...convo, { role: "user", text: q }];
+    setConvo(next);
+    setInput("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: settings.aiModel,
+          messages: next.map((m) => ({ role: m.role, content: m.text })),
+        }),
+      });
+      const data = await res.json();
+      const text = res.ok && data.text ? data.text : t("aiError");
+      setConvo((c) => [...c, { role: "assistant", text }]);
+    } catch {
+      setConvo((c) => [...c, { role: "assistant", text: t("aiError") }]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const demo: { role: "user" | "assistant"; node: React.ReactNode }[] = [
@@ -132,13 +165,6 @@ export default function AiAssistantPage() {
     },
   ];
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!input.trim()) return;
-    setAsked((p) => [...p, input.trim()]);
-    setInput("");
-  }
-
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -169,23 +195,20 @@ export default function AiAssistantPage() {
           {demo.map((m, i) => (
             <Bubble key={`d${i}`} role={m.role}>{m.node}</Bubble>
           ))}
-          {asked.map((q, i) => (
-            <div key={`a${i}`} className="space-y-5">
-              <Bubble role="user">{q}</Bubble>
-              <Bubble role="assistant">
-                {active ? (
-                  <p>{t("demoNote")}</p>
-                ) : (
-                  <p>
-                    {t("connectBanner")}{" "}
-                    <Link href="/settings" className="text-gold-dark underline">
-                      {t("nav_settings")}
-                    </Link>
-                  </p>
-                )}
-              </Bubble>
-            </div>
+          {convo.map((m, i) => (
+            <Bubble key={`c${i}`} role={m.role}>
+              <span className="whitespace-pre-wrap">{m.text}</span>
+            </Bubble>
           ))}
+          {loading && (
+            <Bubble role="assistant">
+              <span className="inline-flex gap-1">
+                <span className="h-2 w-2 animate-bounce rounded-full bg-gold-dark [animation-delay:-0.3s]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-gold-dark [animation-delay:-0.15s]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-gold-dark" />
+              </span>
+            </Bubble>
+          )}
         </div>
 
         <form onSubmit={onSubmit} className="flex items-center gap-2 border-t border-border p-4">
@@ -195,7 +218,7 @@ export default function AiAssistantPage() {
             placeholder={t("askPortfolio")}
             className="flex-1 rounded-md border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
-          <button type="submit" className="flex h-10 w-10 items-center justify-center rounded-md bg-gold text-charcoal transition-colors hover:bg-gold-dark hover:text-white" aria-label={t("askAi")}>
+          <button type="submit" disabled={loading} className="flex h-10 w-10 items-center justify-center rounded-md bg-gold text-charcoal transition-colors hover:bg-gold-dark hover:text-white disabled:opacity-50" aria-label={t("askAi")}>
             <Send className="h-4 w-4" />
           </button>
         </form>
@@ -205,8 +228,9 @@ export default function AiAssistantPage() {
         <div className="mt-4 flex items-center gap-3 rounded-lg border border-gold/40 bg-gold-light px-4 py-3 text-sm text-charcoal">
           <Lock className="h-4 w-4 shrink-0 text-gold-dark" />
           <span>
-            {t("connectBanner")}{" "}
-            <Link href="/settings" className="font-medium text-gold-dark underline">{t("nav_settings")}</Link>
+            {t("connectBannerPre")}{" "}
+            <Link href="/settings" className="font-medium text-gold-dark underline">{t("nav_settings")}</Link>{" "}
+            {t("connectBannerPost")}
           </span>
         </div>
       )}

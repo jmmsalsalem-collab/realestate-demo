@@ -109,7 +109,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="apiKey">{t("anthropicApiKey")}</Label>
+                <Label htmlFor="apiKey">{t("geminiApiKey")}</Label>
                 <div className="relative mt-2">
                   <Input id="apiKey" type={showKey ? "text" : "password"} placeholder="sk-ant-…" className="pe-10 font-mono" value={settings.apiKey} onChange={(e) => update("apiKey", e.target.value)} />
                   <button type="button" onClick={() => setShowKey((v) => !v)} className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-charcoal" aria-label="toggle">
@@ -118,7 +118,8 @@ export default function SettingsPage() {
                 </div>
                 <p className="mt-1.5 text-xs text-muted-foreground">
                   {t("apiKeyHelp1")}{" "}
-                  <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" className="text-gold-dark underline">console.anthropic.com</a>
+                  <a href="https://aistudio.google.com" target="_blank" rel="noreferrer" className="text-gold-dark underline">aistudio.google.com</a>{" "}
+                  {t("apiKeyHelp2")}
                 </p>
               </div>
 

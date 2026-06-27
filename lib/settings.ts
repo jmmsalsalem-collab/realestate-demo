@@ -11,9 +11,8 @@ export interface CrmSettings {
 }
 
 export const AI_MODELS = [
-  "claude-sonnet-4-6",
-  "claude-opus-4-8",
-  "claude-haiku-4-5",
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
 ] as const;
 
 export const DEFAULT_SETTINGS: CrmSettings = {
@@ -24,7 +23,7 @@ export const DEFAULT_SETTINGS: CrmSettings = {
   managers:
     "Abdulaziz Al-Saqr, Lulwa Al-Bahar, Yousef Al-Otaibi, Dana Al-Mutairi",
   apiKey: "",
-  aiModel: "claude-sonnet-4-6",
+  aiModel: "gemini-2.5-flash",
   aiEnabled: false,
 };
 
