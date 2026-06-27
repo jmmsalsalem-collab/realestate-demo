@@ -1,8 +1,12 @@
 // ---------------------------------------------------------------------------
-// Prestige Properties — CRM demo dataset
-// All data is fictional and authored for demonstration purposes.
-// Reference "today" for relative dates is 2026-06-27.
+// Prestige Properties — bilingual Kuwait CRM dataset (KWD pricing)
+// All data is fictional. Reference "today" for relative dates is 2026-06-27.
 // ---------------------------------------------------------------------------
+
+export interface Bi {
+  en: string;
+  ar: string;
+}
 
 export type PropertyType = "Residential" | "Commercial" | "Mixed";
 export type UnitType =
@@ -11,12 +15,9 @@ export type UnitType =
   | "2BR"
   | "3BR"
   | "Office"
-  | "Retail";
-export type TenantStatus =
-  | "Current"
-  | "Late"
-  | "Notice Given"
-  | "Vacated";
+  | "Retail"
+  | "Villa";
+export type TenantStatus = "Current" | "Late" | "Notice Given" | "Vacated";
 export type VacancyStatus = "Listed" | "Preparing" | "Available";
 export type Priority = "Low" | "Medium" | "High" | "Urgent";
 export type TicketStatus = "Open" | "In Progress" | "Resolved";
@@ -24,45 +25,37 @@ export type TicketStatus = "Open" | "In Progress" | "Resolved";
 export interface Unit {
   number: string;
   unitType: UnitType;
-  rent: number;
+  rent: number; // KWD / month
   occupied: boolean;
-  // Occupied units:
-  tenantName?: string;
+  tenantName?: Bi;
   leaseStart?: string;
   leaseEnd?: string;
   tenantStatus?: TenantStatus;
   balanceOwed?: number;
-  // Vacant units:
   vacancyStatus?: VacancyStatus;
   vacantSince?: string;
-  lastTenant?: string;
+  lastTenant?: Bi;
 }
 
 export interface Property {
   id: string;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
+  name: Bi;
+  area: Bi;
+  block: Bi;
   type: PropertyType;
-  manager: string;
+  manager: Bi;
   gradient: string;
   yearBuilt: number;
-  // Monthly operating expense components (USD)
-  expenses: {
-    maintenance: number;
-    insurance: number;
-    taxes: number;
-  };
+  expenses: { maintenance: number; insurance: number; taxes: number };
   units: Unit[];
 }
 
 export interface Tenant {
   id: string;
-  name: string;
+  name: Bi;
   unit: string;
   propertyId: string;
-  propertyName: string;
+  propertyName: Bi;
   leaseStart: string;
   leaseEnd: string;
   rent: number;
@@ -73,179 +66,179 @@ export interface Tenant {
 export interface MaintenanceTicket {
   id: string;
   propertyId: string;
-  propertyName: string;
+  propertyName: Bi;
   unit: string;
-  tenant: string;
-  issue: string;
+  tenant: Bi;
+  issue: Bi;
   priority: Priority;
-  assignedTo: string;
+  assignedTo: Bi;
   status: TicketStatus;
   opened: string;
   resolved?: string;
 }
 
-export const MANAGERS = [
-  "Sofia Marquez",
-  "Daniel Brooks",
-  "Marcus Lee",
-  "Priya Nair",
-] as const;
-
+// Refined charcoal photo-placeholder gradients (no bright color).
 const G = {
-  dusk: "linear-gradient(135deg, #2d3142 0%, #4f5d75 55%, #bfa181 100%)",
-  ocean: "linear-gradient(135deg, #1b2a36 0%, #2f4858 55%, #86a8b8 100%)",
-  forest: "linear-gradient(135deg, #1f2a24 0%, #3a4d42 55%, #8a9a5b 100%)",
-  golden: "linear-gradient(135deg, #6b5636 0%, #a98b54 50%, #d9c08a 100%)",
-  slate: "linear-gradient(135deg, #23262b 0%, #3c4148 55%, #8d949c 100%)",
-  marble: "linear-gradient(135deg, #e8e4dc 0%, #cfc7ba 50%, #9a8f7d 100%)",
-  blush: "linear-gradient(135deg, #6e4b4b 0%, #a87f7a 55%, #e3ccc2 100%)",
+  a: "linear-gradient(135deg, #0b0f17 0%, #1f2937 60%, #374151 100%)",
+  b: "linear-gradient(135deg, #111827 0%, #1f2430 55%, #2c3440 100%)",
+  c: "linear-gradient(135deg, #0f1115 0%, #1c2530 55%, #3a4452 100%)",
+  d: "linear-gradient(135deg, #14171c 0%, #232a33 60%, #404a57 100%)",
 };
+
+// Managers
+const M = {
+  saqr: { en: "Abdulaziz Al-Saqr", ar: "عبدالعزيز الصقر" },
+  bahar: { en: "Lulwa Al-Bahar", ar: "لولوة البحر" },
+  otaibi: { en: "Yousef Al-Otaibi", ar: "يوسف العتيبي" },
+  mutairi: { en: "Dana Al-Mutairi", ar: "دانة المطيري" },
+};
+
+const AREA = {
+  salmiya: { en: "Salmiya", ar: "السالمية" },
+  hawalli: { en: "Hawalli", ar: "حولي" },
+  mishref: { en: "Mishref", ar: "مشرف" },
+  jabriya: { en: "Jabriya", ar: "الجابرية" },
+  rumaithiya: { en: "Rumaithiya", ar: "الرميثية" },
+  bayan: { en: "Bayan", ar: "بيان" },
+};
+
+const blk = (n: number, ar: string): Bi => ({ en: `Block ${n}`, ar: `قطعة ${ar}` });
 
 export const properties: Property[] = [
   {
-    id: "marina-bluffs",
-    name: "Marina Bluffs Residences",
-    address: "1420 Harbor Drive",
-    city: "San Diego",
-    state: "CA",
+    id: "salmiya-heights",
+    name: { en: "Salmiya Heights", ar: "أبراج السالمية" },
+    area: AREA.salmiya,
+    block: blk(4, "٤"),
     type: "Residential",
-    manager: "Sofia Marquez",
-    gradient: G.ocean,
-    yearBuilt: 2016,
-    expenses: { maintenance: 3200, insurance: 1850, taxes: 4100 },
-    units: [
-      { number: "101", unitType: "1BR", rent: 2650, occupied: true, tenantName: "Olivia Bennett", leaseStart: "2025-02-01", leaseEnd: "2026-01-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "102", unitType: "Studio", rent: 2100, occupied: true, tenantName: "Marcus Chen", leaseStart: "2024-09-15", leaseEnd: "2026-08-14", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "103", unitType: "2BR", rent: 3450, occupied: true, tenantName: "Priya Patel", leaseStart: "2025-06-01", leaseEnd: "2026-05-31", tenantStatus: "Notice Given", balanceOwed: 0 },
-      { number: "201", unitType: "1BR", rent: 2700, occupied: true, tenantName: "James O'Connor", leaseStart: "2025-01-10", leaseEnd: "2026-07-09", tenantStatus: "Late", balanceOwed: 2700 },
-      { number: "202", unitType: "2BR", rent: 3500, occupied: true, tenantName: "Hannah Kim", leaseStart: "2024-11-01", leaseEnd: "2026-10-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "203", unitType: "Studio", rent: 2050, occupied: false, vacancyStatus: "Listed", vacantSince: "2026-05-12", lastTenant: "Derek Walsh" },
-      { number: "301", unitType: "2BR", rent: 3600, occupied: true, tenantName: "Aisha Rahman", leaseStart: "2025-03-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "302", unitType: "1BR", rent: 2750, occupied: false, vacancyStatus: "Preparing", vacantSince: "2026-06-08", lastTenant: "Tyler Brooks" },
-    ],
-  },
-  {
-    id: "old-oak",
-    name: "Old Oak Townhomes",
-    address: "88 Pecan Street",
-    city: "Austin",
-    state: "TX",
-    type: "Residential",
-    manager: "Daniel Brooks",
-    gradient: G.forest,
-    yearBuilt: 2012,
-    expenses: { maintenance: 2400, insurance: 1400, taxes: 3300 },
-    units: [
-      { number: "A", unitType: "3BR", rent: 3200, occupied: true, tenantName: "Robert Salinas", leaseStart: "2024-08-01", leaseEnd: "2026-07-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "B", unitType: "3BR", rent: 3150, occupied: true, tenantName: "Emily Carter", leaseStart: "2025-05-15", leaseEnd: "2026-05-14", tenantStatus: "Late", balanceOwed: 1575 },
-      { number: "C", unitType: "2BR", rent: 2600, occupied: true, tenantName: "David Nguyen", leaseStart: "2025-04-01", leaseEnd: "2026-09-30", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "D", unitType: "2BR", rent: 2550, occupied: false, vacancyStatus: "Available", vacantSince: "2026-04-02", lastTenant: "Grace Lin" },
-      { number: "E", unitType: "3BR", rent: 3250, occupied: true, tenantName: "Sandra Whitfield", leaseStart: "2024-12-01", leaseEnd: "2026-11-30", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "F", unitType: "2BR", rent: 2650, occupied: true, tenantName: "Kevin Park", leaseStart: "2025-07-01", leaseEnd: "2026-06-30", tenantStatus: "Current", balanceOwed: 0 },
-    ],
-  },
-  {
-    id: "cedar-cove",
-    name: "Cedar Cove Apartments",
-    address: "305 Willow Bend",
-    city: "Portland",
-    state: "OR",
-    type: "Residential",
-    manager: "Sofia Marquez",
-    gradient: G.dusk,
-    yearBuilt: 2019,
-    expenses: { maintenance: 3600, insurance: 2050, taxes: 3900 },
-    units: [
-      { number: "1A", unitType: "1BR", rent: 2200, occupied: true, tenantName: "Natalie Brooks", leaseStart: "2025-01-01", leaseEnd: "2026-07-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "1B", unitType: "1BR", rent: 2150, occupied: true, tenantName: "Omar Haddad", leaseStart: "2024-10-01", leaseEnd: "2026-09-30", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "1C", unitType: "Studio", rent: 1750, occupied: true, tenantName: "Lucy Tran", leaseStart: "2025-08-01", leaseEnd: "2026-07-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "2A", unitType: "2BR", rent: 2900, occupied: true, tenantName: "Brandon Cole", leaseStart: "2025-02-15", leaseEnd: "2026-08-14", tenantStatus: "Late", balanceOwed: 2900 },
-      { number: "2B", unitType: "2BR", rent: 2850, occupied: true, tenantName: "Sophia Russo", leaseStart: "2024-09-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "2C", unitType: "Studio", rent: 1700, occupied: false, vacancyStatus: "Listed", vacantSince: "2026-05-28", lastTenant: "Henry Adams" },
-      { number: "3A", unitType: "1BR", rent: 2250, occupied: true, tenantName: "Maria Gonzalez", leaseStart: "2025-03-01", leaseEnd: "2026-08-28", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "3B", unitType: "2BR", rent: 2950, occupied: true, tenantName: "Ethan Wright", leaseStart: "2024-12-15", leaseEnd: "2026-12-14", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "3C", unitType: "1BR", rent: 2200, occupied: false, vacancyStatus: "Preparing", vacantSince: "2026-06-15", lastTenant: "Chloe Bennett" },
-      { number: "PH", unitType: "2BR", rent: 3300, occupied: true, tenantName: "Daniel Foster", leaseStart: "2025-05-01", leaseEnd: "2026-04-30", tenantStatus: "Notice Given", balanceOwed: 0 },
-    ],
-  },
-  {
-    id: "summit-ridge",
-    name: "Summit Ridge Plaza",
-    address: "700 Alpine Way",
-    city: "Denver",
-    state: "CO",
-    type: "Commercial",
-    manager: "Marcus Lee",
-    gradient: G.slate,
-    yearBuilt: 2009,
-    expenses: { maintenance: 4200, insurance: 3100, taxes: 6800 },
-    units: [
-      { number: "Suite 100", unitType: "Retail", rent: 5800, occupied: true, tenantName: "Bloom & Vine Florists", leaseStart: "2023-06-01", leaseEnd: "2026-05-31", tenantStatus: "Notice Given", balanceOwed: 0 },
-      { number: "Suite 110", unitType: "Retail", rent: 6200, occupied: true, tenantName: "Summit Coffee Roasters", leaseStart: "2024-01-01", leaseEnd: "2026-12-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "Suite 200", unitType: "Office", rent: 7400, occupied: true, tenantName: "Alpine Wealth Advisors", leaseStart: "2024-03-01", leaseEnd: "2027-02-28", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "Suite 210", unitType: "Office", rent: 6900, occupied: false, vacancyStatus: "Available", vacantSince: "2026-02-18", lastTenant: "Ridgeline Architects" },
-      { number: "Suite 300", unitType: "Office", rent: 8100, occupied: true, tenantName: "Meridian Legal Group", leaseStart: "2025-01-15", leaseEnd: "2026-08-14", tenantStatus: "Late", balanceOwed: 8100 },
-    ],
-  },
-  {
-    id: "laurel-park",
-    name: "Laurel Park Lofts",
-    address: "212 Canal Street",
-    city: "Chicago",
-    state: "IL",
-    type: "Mixed",
-    manager: "Priya Nair",
-    gradient: G.golden,
+    manager: M.saqr,
+    gradient: G.a,
     yearBuilt: 2018,
-    expenses: { maintenance: 3800, insurance: 2400, taxes: 5200 },
+    expenses: { maintenance: 620, insurance: 240, taxes: 180 },
     units: [
-      { number: "G1", unitType: "Retail", rent: 4500, occupied: true, tenantName: "Canal Street Bakery", leaseStart: "2024-05-01", leaseEnd: "2026-09-30", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "G2", unitType: "Retail", rent: 4200, occupied: false, vacancyStatus: "Listed", vacantSince: "2026-03-20", lastTenant: "Loop Cycle Studio" },
-      { number: "201", unitType: "1BR", rent: 2400, occupied: true, tenantName: "Isabella Moreno", leaseStart: "2025-04-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "202", unitType: "2BR", rent: 3100, occupied: true, tenantName: "Jacob Sullivan", leaseStart: "2024-11-15", leaseEnd: "2026-11-14", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "301", unitType: "2BR", rent: 3150, occupied: true, tenantName: "Mia Thompson", leaseStart: "2025-06-15", leaseEnd: "2026-06-14", tenantStatus: "Late", balanceOwed: 1575 },
-      { number: "302", unitType: "1BR", rent: 2450, occupied: true, tenantName: "Noah Williams", leaseStart: "2025-02-01", leaseEnd: "2026-07-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "401", unitType: "2BR", rent: 3250, occupied: true, tenantName: "Ava Martinez", leaseStart: "2024-10-01", leaseEnd: "2026-09-30", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "402", unitType: "1BR", rent: 2500, occupied: false, vacancyStatus: "Preparing", vacantSince: "2026-06-20", lastTenant: "Liam Davis" },
+      { number: "101", unitType: "1BR", rent: 280, occupied: true, tenantName: { en: "Fatima Al-Ali", ar: "فاطمة العلي" }, leaseStart: "2025-02-01", leaseEnd: "2026-01-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "102", unitType: "Studio", rent: 210, occupied: true, tenantName: { en: "Mohammed Al-Rashid", ar: "محمد الرشيد" }, leaseStart: "2024-09-15", leaseEnd: "2026-08-14", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "103", unitType: "2BR", rent: 430, occupied: true, tenantName: { en: "Noura Al-Sabah", ar: "نورة الصباح" }, leaseStart: "2025-06-01", leaseEnd: "2026-05-31", tenantStatus: "Notice Given", balanceOwed: 0 },
+      { number: "201", unitType: "1BR", rent: 300, occupied: true, tenantName: { en: "Khaled Al-Fadhli", ar: "خالد الفضلي" }, leaseStart: "2025-01-10", leaseEnd: "2026-07-09", tenantStatus: "Late", balanceOwed: 300 },
+      { number: "202", unitType: "2BR", rent: 450, occupied: true, tenantName: { en: "Mariam Al-Kandari", ar: "مريم الكندري" }, leaseStart: "2024-11-01", leaseEnd: "2026-10-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "203", unitType: "Studio", rent: 200, occupied: false, vacancyStatus: "Listed", vacantSince: "2026-05-12", lastTenant: { en: "Ahmad Al-Ajmi", ar: "أحمد العجمي" } },
+      { number: "301", unitType: "3BR", rent: 620, occupied: true, tenantName: { en: "Aisha Al-Qattan", ar: "عائشة القطان" }, leaseStart: "2025-03-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "302", unitType: "1BR", rent: 290, occupied: false, vacancyStatus: "Preparing", vacantSince: "2026-06-08", lastTenant: { en: "Sara Al-Khalifa", ar: "سارة الخليفة" } },
     ],
   },
   {
-    id: "harborview",
-    name: "Harborview Suites",
-    address: "55 Pike Place",
-    city: "Seattle",
-    state: "WA",
+    id: "mishref-villas",
+    name: { en: "Mishref Villas", ar: "فلل مشرف" },
+    area: AREA.mishref,
+    block: blk(6, "٦"),
     type: "Residential",
-    manager: "Daniel Brooks",
-    gradient: G.blush,
-    yearBuilt: 2021,
-    expenses: { maintenance: 2900, insurance: 1900, taxes: 4400 },
+    manager: M.otaibi,
+    gradient: G.b,
+    yearBuilt: 2015,
+    expenses: { maintenance: 880, insurance: 420, taxes: 240 },
     units: [
-      { number: "401", unitType: "1BR", rent: 2850, occupied: true, tenantName: "Charlotte Reed", leaseStart: "2025-03-15", leaseEnd: "2026-08-14", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "402", unitType: "2BR", rent: 3700, occupied: true, tenantName: "Benjamin Scott", leaseStart: "2024-12-01", leaseEnd: "2026-11-30", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "403", unitType: "Studio", rent: 2300, occupied: true, tenantName: "Zoe Campbell", leaseStart: "2025-07-01", leaseEnd: "2026-06-30", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "501", unitType: "2BR", rent: 3800, occupied: true, tenantName: "Lucas Bennett", leaseStart: "2025-01-01", leaseEnd: "2026-07-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "502", unitType: "1BR", rent: 2900, occupied: false, vacancyStatus: "Available", vacantSince: "2026-05-01", lastTenant: "Ella Foster" },
-      { number: "503", unitType: "2BR", rent: 3750, occupied: true, tenantName: "Amelia Ward", leaseStart: "2024-10-15", leaseEnd: "2026-10-14", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "PH1", unitType: "3BR", rent: 5200, occupied: true, tenantName: "Henry Mitchell", leaseStart: "2025-02-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "Villa 1", unitType: "Villa", rent: 1500, occupied: true, tenantName: { en: "Abdullah Al-Dosari", ar: "عبدالله الدوسري" }, leaseStart: "2024-08-01", leaseEnd: "2026-07-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "Villa 2", unitType: "Villa", rent: 1650, occupied: true, tenantName: { en: "Hessa Al-Roumi", ar: "حصة الرومي" }, leaseStart: "2025-05-15", leaseEnd: "2026-05-14", tenantStatus: "Late", balanceOwed: 1650 },
+      { number: "Villa 3", unitType: "Villa", rent: 1400, occupied: true, tenantName: { en: "Faisal Al-Enezi", ar: "فيصل العنزي" }, leaseStart: "2025-04-01", leaseEnd: "2026-09-30", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "Villa 4", unitType: "Villa", rent: 1550, occupied: false, vacancyStatus: "Available", vacantSince: "2026-04-02", lastTenant: { en: "Latifa Al-Mansour", ar: "لطيفة المنصور" } },
+      { number: "Villa 5", unitType: "Villa", rent: 1800, occupied: true, tenantName: { en: "Omar Al-Hashemi", ar: "عمر الهاشمي" }, leaseStart: "2024-12-01", leaseEnd: "2026-11-30", tenantStatus: "Current", balanceOwed: 0 },
     ],
   },
   {
-    id: "gold-street",
-    name: "Gold Street Commercial",
-    address: "401 Gold Street",
-    city: "San Francisco",
-    state: "CA",
-    type: "Commercial",
-    manager: "Marcus Lee",
-    gradient: G.marble,
-    yearBuilt: 2007,
-    expenses: { maintenance: 3500, insurance: 2800, taxes: 7200 },
+    id: "jabriya-residences",
+    name: { en: "Jabriya Residences", ar: "مساكن الجابرية" },
+    area: AREA.jabriya,
+    block: blk(9, "٩"),
+    type: "Residential",
+    manager: M.bahar,
+    gradient: G.c,
+    yearBuilt: 2020,
+    expenses: { maintenance: 700, insurance: 280, taxes: 200 },
     units: [
-      { number: "Floor 1", unitType: "Office", rent: 9200, occupied: true, tenantName: "Northpoint Capital", leaseStart: "2024-02-01", leaseEnd: "2027-01-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "Floor 2", unitType: "Office", rent: 8800, occupied: true, tenantName: "Vertex Design Studio", leaseStart: "2025-01-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
-      { number: "Floor 3", unitType: "Office", rent: 9000, occupied: false, vacancyStatus: "Listed", vacantSince: "2026-01-15", lastTenant: "Helix Biotech" },
-      { number: "Floor 4", unitType: "Office", rent: 9500, occupied: true, tenantName: "Quill & Co. Consulting", leaseStart: "2024-09-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "1A", unitType: "1BR", rent: 260, occupied: true, tenantName: { en: "Dalal Al-Saleh", ar: "دلال الصالح" }, leaseStart: "2025-01-01", leaseEnd: "2026-07-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "1B", unitType: "1BR", rent: 250, occupied: true, tenantName: { en: "Bader Al-Mutawa", ar: "بدر المطوع" }, leaseStart: "2024-10-01", leaseEnd: "2026-09-30", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "1C", unitType: "Studio", rent: 190, occupied: true, tenantName: { en: "Reem Al-Failakawi", ar: "ريم الفيلكاوي" }, leaseStart: "2025-08-01", leaseEnd: "2026-07-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "2A", unitType: "2BR", rent: 410, occupied: true, tenantName: { en: "Yaqoub Al-Sane", ar: "يعقوب الصانع" }, leaseStart: "2025-02-15", leaseEnd: "2026-08-14", tenantStatus: "Late", balanceOwed: 410 },
+      { number: "2B", unitType: "2BR", rent: 420, occupied: true, tenantName: { en: "Shaikha Al-Sayer", ar: "شيخة الساير" }, leaseStart: "2024-09-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "2C", unitType: "Studio", rent: 185, occupied: false, vacancyStatus: "Listed", vacantSince: "2026-05-28", lastTenant: { en: "Nasser Al-Ghanim", ar: "ناصر الغانم" } },
+      { number: "3A", unitType: "3BR", rent: 560, occupied: true, tenantName: { en: "Maryam Al-Hajri", ar: "مريم الهاجري" }, leaseStart: "2025-03-01", leaseEnd: "2026-08-28", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "3B", unitType: "2BR", rent: 440, occupied: true, tenantName: { en: "Talal Al-Wazzan", ar: "طلال الوزان" }, leaseStart: "2024-12-15", leaseEnd: "2026-12-14", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "3C", unitType: "1BR", rent: 270, occupied: false, vacancyStatus: "Preparing", vacantSince: "2026-06-15", lastTenant: { en: "Hamad Al-Rumaihi", ar: "حمد الرميحي" } },
+    ],
+  },
+  {
+    id: "rumaithiya-gardens",
+    name: { en: "Rumaithiya Gardens", ar: "حدائق الرميثية" },
+    area: AREA.rumaithiya,
+    block: blk(2, "٢"),
+    type: "Residential",
+    manager: M.saqr,
+    gradient: G.d,
+    yearBuilt: 2017,
+    expenses: { maintenance: 560, insurance: 230, taxes: 170 },
+    units: [
+      { number: "G1", unitType: "1BR", rent: 240, occupied: true, tenantName: { en: "Salem Al-Azmi", ar: "سالم العازمي" }, leaseStart: "2025-04-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "G2", unitType: "2BR", rent: 380, occupied: true, tenantName: { en: "Munira Al-Sabah", ar: "منيرة الصباح" }, leaseStart: "2024-11-15", leaseEnd: "2026-11-14", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "F1", unitType: "2BR", rent: 400, occupied: true, tenantName: { en: "Jassim Al-Kharafi", ar: "جاسم الخرافي" }, leaseStart: "2025-06-15", leaseEnd: "2026-06-14", tenantStatus: "Late", balanceOwed: 800 },
+      { number: "F2", unitType: "3BR", rent: 520, occupied: true, tenantName: { en: "Ghaya Al-Mulla", ar: "غايا الملا" }, leaseStart: "2025-02-01", leaseEnd: "2026-07-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "S1", unitType: "Studio", rent: 180, occupied: true, tenantName: { en: "Hamad Al-Shemmari", ar: "حمد الشمري" }, leaseStart: "2024-10-01", leaseEnd: "2026-09-30", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "S2", unitType: "1BR", rent: 250, occupied: false, vacancyStatus: "Available", vacantSince: "2026-05-01", lastTenant: { en: "Wadha Al-Otaibi", ar: "وضحة العتيبي" } },
+    ],
+  },
+  {
+    id: "hawalli-plaza",
+    name: { en: "Hawalli Plaza", ar: "بلازا حولي" },
+    area: AREA.hawalli,
+    block: blk(12, "١٢"),
+    type: "Commercial",
+    manager: M.bahar,
+    gradient: G.a,
+    yearBuilt: 2012,
+    expenses: { maintenance: 940, insurance: 520, taxes: 360 },
+    units: [
+      { number: "Shop 1", unitType: "Retail", rent: 850, occupied: true, tenantName: { en: "Al-Masa Restaurant", ar: "مطعم الماسة" }, leaseStart: "2023-06-01", leaseEnd: "2026-05-31", tenantStatus: "Notice Given", balanceOwed: 0 },
+      { number: "Shop 2", unitType: "Retail", rent: 780, occupied: true, tenantName: { en: "Marina Pharmacy", ar: "صيدلية المارينا" }, leaseStart: "2024-01-01", leaseEnd: "2026-12-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "Office 1", unitType: "Office", rent: 950, occupied: true, tenantName: { en: "Al-Bahar Trading Co.", ar: "شركة البحر التجارية" }, leaseStart: "2024-03-01", leaseEnd: "2027-02-28", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "Office 2", unitType: "Office", rent: 900, occupied: false, vacancyStatus: "Available", vacantSince: "2026-02-18", lastTenant: { en: "Diwan Law Firm", ar: "مكتب الديوان للمحاماة" } },
+      { number: "Office 3", unitType: "Office", rent: 1100, occupied: true, tenantName: { en: "Kuwait Tech Solutions", ar: "حلول الكويت التقنية" }, leaseStart: "2025-01-15", leaseEnd: "2026-08-14", tenantStatus: "Late", balanceOwed: 1100 },
+    ],
+  },
+  {
+    id: "salmiya-souq",
+    name: { en: "Salmiya Souq Center", ar: "مجمع سوق السالمية" },
+    area: AREA.salmiya,
+    block: blk(10, "١٠"),
+    type: "Mixed",
+    manager: M.mutairi,
+    gradient: G.b,
+    yearBuilt: 2019,
+    expenses: { maintenance: 820, insurance: 460, taxes: 300 },
+    units: [
+      { number: "R1", unitType: "Retail", rent: 700, occupied: true, tenantName: { en: "Boutique Café", ar: "مقهى بوتيك" }, leaseStart: "2024-05-01", leaseEnd: "2026-09-30", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "R2", unitType: "Retail", rent: 650, occupied: false, vacancyStatus: "Listed", vacantSince: "2026-03-20", lastTenant: { en: "Zain Telecom Branch", ar: "فرع زين للاتصالات" } },
+      { number: "A1", unitType: "1BR", rent: 300, occupied: true, tenantName: { en: "Abdulrahman Al-Sayegh", ar: "عبدالرحمن الصايغ" }, leaseStart: "2025-04-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "A2", unitType: "2BR", rent: 470, occupied: true, tenantName: { en: "Bibi Al-Awadhi", ar: "بيبي العوضي" }, leaseStart: "2024-11-15", leaseEnd: "2026-11-14", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "A3", unitType: "2BR", rent: 480, occupied: true, tenantName: { en: "Saad Al-Ajmi", ar: "سعد العجمي" }, leaseStart: "2025-06-15", leaseEnd: "2026-06-14", tenantStatus: "Late", balanceOwed: 480 },
+      { number: "A4", unitType: "1BR", rent: 310, occupied: true, tenantName: { en: "Eman Al-Khaldi", ar: "إيمان الخالدي" }, leaseStart: "2025-02-01", leaseEnd: "2026-07-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "A5", unitType: "3BR", rent: 680, occupied: true, tenantName: { en: "Waleed Al-Rashidi", ar: "وليد الرشيدي" }, leaseStart: "2024-10-01", leaseEnd: "2026-09-30", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "A6", unitType: "1BR", rent: 320, occupied: false, vacancyStatus: "Preparing", vacantSince: "2026-06-20", lastTenant: { en: "Dana Al-Sahli", ar: "دانة السهلي" } },
+    ],
+  },
+  {
+    id: "bayan-tower",
+    name: { en: "Bayan Commercial Tower", ar: "برج بيان التجاري" },
+    area: AREA.bayan,
+    block: blk(7, "٧"),
+    type: "Commercial",
+    manager: M.otaibi,
+    gradient: G.c,
+    yearBuilt: 2010,
+    expenses: { maintenance: 760, insurance: 480, taxes: 340 },
+    units: [
+      { number: "Floor 1", unitType: "Office", rent: 1200, occupied: true, tenantName: { en: "Gulf Finance House", ar: "بيت التمويل الخليجي" }, leaseStart: "2024-02-01", leaseEnd: "2027-01-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "Floor 2", unitType: "Office", rent: 1050, occupied: true, tenantName: { en: "Vertex Design Studio", ar: "استوديو فيرتكس للتصميم" }, leaseStart: "2025-01-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
+      { number: "Floor 3", unitType: "Office", rent: 1000, occupied: false, vacancyStatus: "Listed", vacantSince: "2026-01-15", lastTenant: { en: "Helix Biotech", ar: "هيليكس للتقنية الحيوية" } },
+      { number: "Floor 4", unitType: "Office", rent: 1150, occupied: true, tenantName: { en: "Quill & Co. Consulting", ar: "كويل وشركاه للاستشارات" }, leaseStart: "2024-09-01", leaseEnd: "2026-08-31", tenantStatus: "Current", balanceOwed: 0 },
     ],
   },
 ];
@@ -279,14 +272,13 @@ export function getTenant(id: string): Tenant | undefined {
 
 export interface VacantUnit {
   propertyId: string;
-  propertyName: string;
-  city: string;
-  state: string;
+  propertyName: Bi;
+  area: Bi;
   unit: string;
   unitType: UnitType;
   rent: number;
   vacantSince: string;
-  lastTenant: string;
+  lastTenant: Bi;
   vacancyStatus: VacancyStatus;
 }
 
@@ -296,32 +288,42 @@ export const vacancies: VacantUnit[] = properties.flatMap((p) =>
     .map((u) => ({
       propertyId: p.id,
       propertyName: p.name,
-      city: p.city,
-      state: p.state,
+      area: p.area,
       unit: u.number,
       unitType: u.unitType,
       rent: u.rent,
       vacantSince: u.vacantSince!,
-      lastTenant: u.lastTenant ?? "—",
+      lastTenant: u.lastTenant ?? { en: "—", ar: "—" },
       vacancyStatus: u.vacancyStatus ?? "Available",
     }))
 );
 
 // --- Maintenance ----------------------------------------------------------
 
+const VENDOR = {
+  plumb: { en: "Reliable Plumbing Co.", ar: "شركة السباكة الموثوقة" },
+  hvac: { en: "Gulf HVAC Services", ar: "خدمات الخليج للتكييف" },
+  inhouse: { en: "In-house Maintenance", ar: "الصيانة الداخلية" },
+  electric: { en: "Al-Salem Electric", ar: "السالم للكهرباء" },
+  reno: { en: "Coastline Renovations", ar: "الساحل للتجديدات" },
+  otis: { en: "Otis Service", ar: "خدمة أوتيس" },
+};
+
+const pName = (id: string): Bi => getProperty(id)!.name;
+
 export const maintenance: MaintenanceTicket[] = [
-  { id: "MT-2041", propertyId: "marina-bluffs", propertyName: "Marina Bluffs Residences", unit: "201", tenant: "James O'Connor", issue: "Kitchen faucet leaking under sink", priority: "Medium", assignedTo: "Reliable Plumbing Co.", status: "In Progress", opened: "2026-06-18" },
-  { id: "MT-2042", propertyId: "cedar-cove", propertyName: "Cedar Cove Apartments", unit: "2A", tenant: "Brandon Cole", issue: "No hot water in primary bathroom", priority: "Urgent", assignedTo: "Pacific HVAC", status: "Open", opened: "2026-06-25" },
-  { id: "MT-2043", propertyId: "summit-ridge", propertyName: "Summit Ridge Plaza", unit: "Suite 300", tenant: "Meridian Legal Group", issue: "HVAC not cooling on the 3rd floor", priority: "High", assignedTo: "Pacific HVAC", status: "Open", opened: "2026-06-23" },
-  { id: "MT-2044", propertyId: "laurel-park", propertyName: "Laurel Park Lofts", unit: "G1", tenant: "Canal Street Bakery", issue: "Walk-in cooler tripping the breaker", priority: "Urgent", assignedTo: "Loop Electric", status: "In Progress", opened: "2026-06-20" },
-  { id: "MT-2045", propertyId: "harborview", propertyName: "Harborview Suites", unit: "402", tenant: "Benjamin Scott", issue: "Dishwasher not draining", priority: "Low", assignedTo: "In-house Maintenance", status: "Open", opened: "2026-06-24" },
-  { id: "MT-2046", propertyId: "old-oak", propertyName: "Old Oak Townhomes", unit: "B", tenant: "Emily Carter", issue: "Garage door opener malfunction", priority: "Medium", assignedTo: "In-house Maintenance", status: "Open", opened: "2026-06-19" },
-  { id: "MT-2047", propertyId: "marina-bluffs", propertyName: "Marina Bluffs Residences", unit: "302", tenant: "—", issue: "Repaint and re-carpet for turnover", priority: "Medium", assignedTo: "Coastline Renovations", status: "In Progress", opened: "2026-06-09" },
-  { id: "MT-2048", propertyId: "gold-street", propertyName: "Gold Street Commercial", unit: "Floor 2", tenant: "Vertex Design Studio", issue: "Elevator inspection overdue", priority: "High", assignedTo: "Otis Service", status: "Open", opened: "2026-06-22" },
-  { id: "MT-2031", propertyId: "cedar-cove", propertyName: "Cedar Cove Apartments", unit: "1B", tenant: "Omar Haddad", issue: "Replace smoke detector batteries", priority: "Low", assignedTo: "In-house Maintenance", status: "Resolved", opened: "2026-05-30", resolved: "2026-06-02" },
-  { id: "MT-2032", propertyId: "harborview", propertyName: "Harborview Suites", unit: "PH1", tenant: "Henry Mitchell", issue: "Balcony door seal replacement", priority: "Medium", assignedTo: "Coastline Renovations", status: "Resolved", opened: "2026-05-21", resolved: "2026-06-04" },
-  { id: "MT-2033", propertyId: "laurel-park", propertyName: "Laurel Park Lofts", unit: "301", tenant: "Mia Thompson", issue: "Bedroom window won't latch", priority: "Low", assignedTo: "In-house Maintenance", status: "Resolved", opened: "2026-05-18", resolved: "2026-05-22" },
-  { id: "MT-2034", propertyId: "summit-ridge", propertyName: "Summit Ridge Plaza", unit: "Suite 110", tenant: "Summit Coffee Roasters", issue: "Front signage light flickering", priority: "Low", assignedTo: "Loop Electric", status: "Resolved", opened: "2026-05-11", resolved: "2026-05-15" },
+  { id: "MT-2041", propertyId: "salmiya-heights", propertyName: pName("salmiya-heights"), unit: "201", tenant: { en: "Khaled Al-Fadhli", ar: "خالد الفضلي" }, issue: { en: "Kitchen faucet leaking under the sink", ar: "تسرّب من حنفية المطبخ تحت الحوض" }, priority: "Medium", assignedTo: VENDOR.plumb, status: "In Progress", opened: "2026-06-18" },
+  { id: "MT-2042", propertyId: "jabriya-residences", propertyName: pName("jabriya-residences"), unit: "2A", tenant: { en: "Yaqoub Al-Sane", ar: "يعقوب الصانع" }, issue: { en: "No hot water in the master bathroom", ar: "لا يوجد ماء ساخن في الحمام الرئيسي" }, priority: "Urgent", assignedTo: VENDOR.hvac, status: "Open", opened: "2026-06-25" },
+  { id: "MT-2043", propertyId: "bayan-tower", propertyName: pName("bayan-tower"), unit: "Floor 2", tenant: { en: "Vertex Design Studio", ar: "استوديو فيرتكس للتصميم" }, issue: { en: "AC not cooling on the second floor", ar: "المكيف لا يبرّد في الطابق الثاني" }, priority: "High", assignedTo: VENDOR.hvac, status: "Open", opened: "2026-06-23" },
+  { id: "MT-2044", propertyId: "salmiya-souq", propertyName: pName("salmiya-souq"), unit: "R1", tenant: { en: "Boutique Café", ar: "مقهى بوتيك" }, issue: { en: "Walk-in cooler tripping the breaker", ar: "ثلاجة المحل تفصل القاطع الكهربائي" }, priority: "Urgent", assignedTo: VENDOR.electric, status: "In Progress", opened: "2026-06-20" },
+  { id: "MT-2045", propertyId: "mishref-villas", propertyName: pName("mishref-villas"), unit: "Villa 2", tenant: { en: "Hessa Al-Roumi", ar: "حصة الرومي" }, issue: { en: "Garden irrigation pump failure", ar: "عطل في مضخة ري الحديقة" }, priority: "Low", assignedTo: VENDOR.inhouse, status: "Open", opened: "2026-06-24" },
+  { id: "MT-2046", propertyId: "rumaithiya-gardens", propertyName: pName("rumaithiya-gardens"), unit: "F1", tenant: { en: "Jassim Al-Kharafi", ar: "جاسم الخرافي" }, issue: { en: "Main entrance door lock malfunction", ar: "خلل في قفل باب المدخل الرئيسي" }, priority: "Medium", assignedTo: VENDOR.inhouse, status: "Open", opened: "2026-06-19" },
+  { id: "MT-2047", propertyId: "salmiya-heights", propertyName: pName("salmiya-heights"), unit: "302", tenant: { en: "—", ar: "—" }, issue: { en: "Repaint and deep clean for turnover", ar: "إعادة دهان وتنظيف شامل للتجهيز" }, priority: "Medium", assignedTo: VENDOR.reno, status: "In Progress", opened: "2026-06-09" },
+  { id: "MT-2048", propertyId: "bayan-tower", propertyName: pName("bayan-tower"), unit: "Floor 1", tenant: { en: "Gulf Finance House", ar: "بيت التمويل الخليجي" }, issue: { en: "Elevator inspection overdue", ar: "فحص المصعد متأخر" }, priority: "High", assignedTo: VENDOR.otis, status: "Open", opened: "2026-06-22" },
+  { id: "MT-2031", propertyId: "jabriya-residences", propertyName: pName("jabriya-residences"), unit: "1B", tenant: { en: "Bader Al-Mutawa", ar: "بدر المطوع" }, issue: { en: "Replace smoke detector batteries", ar: "استبدال بطاريات كاشف الدخان" }, priority: "Low", assignedTo: VENDOR.inhouse, status: "Resolved", opened: "2026-05-30", resolved: "2026-06-02" },
+  { id: "MT-2032", propertyId: "mishref-villas", propertyName: pName("mishref-villas"), unit: "Villa 5", tenant: { en: "Omar Al-Hashemi", ar: "عمر الهاشمي" }, issue: { en: "Replace balcony door weather seal", ar: "استبدال عازل باب الشرفة" }, priority: "Medium", assignedTo: VENDOR.reno, status: "Resolved", opened: "2026-05-21", resolved: "2026-06-04" },
+  { id: "MT-2033", propertyId: "salmiya-souq", propertyName: pName("salmiya-souq"), unit: "A3", tenant: { en: "Saad Al-Ajmi", ar: "سعد العجمي" }, issue: { en: "Bedroom window won't latch", ar: "نافذة غرفة النوم لا تُغلق" }, priority: "Low", assignedTo: VENDOR.inhouse, status: "Resolved", opened: "2026-05-18", resolved: "2026-05-22" },
+  { id: "MT-2034", propertyId: "hawalli-plaza", propertyName: pName("hawalli-plaza"), unit: "Shop 2", tenant: { en: "Marina Pharmacy", ar: "صيدلية المارينا" }, issue: { en: "Storefront signage light flickering", ar: "إضاءة لوحة المحل تومض" }, priority: "Low", assignedTo: VENDOR.electric, status: "Resolved", opened: "2026-05-11", resolved: "2026-05-15" },
 ];
 
 export function maintenanceForProperty(id: string): MaintenanceTicket[] {
@@ -335,8 +337,8 @@ export interface PropertyStats {
   unitsOccupied: number;
   unitsVacant: number;
   occupancyRate: number;
-  monthlyRevenue: number; // collected (occupied rents)
-  grossPotentialRent: number; // all units at asking
+  monthlyRevenue: number;
+  grossPotentialRent: number;
   vacancyLoss: number;
 }
 
@@ -347,7 +349,6 @@ export function propertyStats(p: Property): PropertyStats {
   const unitsVacant = unitsTotal - unitsOccupied;
   const monthlyRevenue = occupied.reduce((s, u) => s + u.rent, 0);
   const grossPotentialRent = p.units.reduce((s, u) => s + u.rent, 0);
-  const vacancyLoss = grossPotentialRent - monthlyRevenue;
   return {
     unitsTotal,
     unitsOccupied,
@@ -355,7 +356,7 @@ export function propertyStats(p: Property): PropertyStats {
     occupancyRate: unitsTotal ? (unitsOccupied / unitsTotal) * 100 : 0,
     monthlyRevenue,
     grossPotentialRent,
-    vacancyLoss,
+    vacancyLoss: grossPotentialRent - monthlyRevenue,
   };
 }
 
@@ -373,14 +374,11 @@ export interface PropertyFinancials {
 
 const MGMT_FEE_RATE = 0.08;
 
-export function propertyFinancials(
-  p: Property,
-  months = 1
-): PropertyFinancials {
-  const stats = propertyStats(p);
-  const grossRent = stats.grossPotentialRent * months;
-  const vacancyLoss = stats.vacancyLoss * months;
-  const collected = stats.monthlyRevenue * months;
+export function propertyFinancials(p: Property, months = 1): PropertyFinancials {
+  const s = propertyStats(p);
+  const grossRent = s.grossPotentialRent * months;
+  const vacancyLoss = s.vacancyLoss * months;
+  const collected = s.monthlyRevenue * months;
   const maintenance = p.expenses.maintenance * months;
   const insurance = p.expenses.insurance * months;
   const taxes = p.expenses.taxes * months;
@@ -414,57 +412,66 @@ export function portfolioKpis(): PortfolioKpis {
   const stats = properties.map(propertyStats);
   const totalUnits = stats.reduce((s, x) => s + x.unitsTotal, 0);
   const occupiedUnits = stats.reduce((s, x) => s + x.unitsOccupied, 0);
-  const vacantUnits = totalUnits - occupiedUnits;
   const monthlyRevenue = stats.reduce((s, x) => s + x.monthlyRevenue, 0);
-  const outstandingRent = tenants.reduce((s, t) => s + t.balanceOwed, 0);
-  const openMaintenance = maintenance.filter(
-    (m) => m.status !== "Resolved"
-  ).length;
   return {
     totalProperties: properties.length,
     totalUnits,
     occupiedUnits,
-    vacantUnits,
+    vacantUnits: totalUnits - occupiedUnits,
     occupancyRate: totalUnits ? (occupiedUnits / totalUnits) * 100 : 0,
     monthlyRevenue,
-    outstandingRent,
-    openMaintenance,
+    outstandingRent: tenants.reduce((s, t) => s + t.balanceOwed, 0),
+    openMaintenance: maintenance.filter((m) => m.status !== "Resolved").length,
   };
 }
 
 // --- Charts data ----------------------------------------------------------
 
-export const MONTH_LABELS = [
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+export const MONTH_LABELS: Bi[] = [
+  { en: "Jul", ar: "يوليو" },
+  { en: "Aug", ar: "أغسطس" },
+  { en: "Sep", ar: "سبتمبر" },
+  { en: "Oct", ar: "أكتوبر" },
+  { en: "Nov", ar: "نوفمبر" },
+  { en: "Dec", ar: "ديسمبر" },
+  { en: "Jan", ar: "يناير" },
+  { en: "Feb", ar: "فبراير" },
+  { en: "Mar", ar: "مارس" },
+  { en: "Apr", ar: "أبريل" },
+  { en: "May", ar: "مايو" },
+  { en: "Jun", ar: "يونيو" },
 ];
 
-// Trailing 12 months of collected revenue (authored to trend up toward current).
-export const revenueByMonth: number[] = [
-  178400, 181200, 183900, 182600, 186100, 188700,
-  190300, 192800, 191500, 194600, 197200, 199850,
-];
+const _kpis = portfolioKpis();
 
-// Trailing 12 months of occupancy rate (%).
+// Trailing 12 months, trending up toward the current collected revenue.
+const REV_FACTORS = [
+  0.9, 0.91, 0.93, 0.94, 0.95, 0.96, 0.965, 0.975, 0.98, 0.985, 0.995, 1,
+];
+export const revenueByMonth: number[] = REV_FACTORS.map((f) =>
+  Math.round(_kpis.monthlyRevenue * f)
+);
+
+// Trailing 12 months of occupancy, ending at the current rate.
 export const occupancyTrend: number[] = [
-  88.5, 89.1, 90.2, 89.6, 91.0, 91.8, 90.4, 92.1, 91.3, 92.7, 84.9, 84.9,
-];
+  88.5, 89.1, 90.2, 89.6, 91, 91.8, 90.4, 92.1, 91.3, 92.7, 86, _kpis.occupancyRate,
+].map((v) => Math.round(v * 10) / 10);
 
 export interface RevenueSlice {
   propertyId: string;
-  name: string;
+  name: Bi;
   value: number;
   color: string;
 }
 
 const PIE_COLORS = [
-  "hsl(38 42% 58%)",
-  "hsl(36 38% 46%)",
-  "hsl(200 25% 38%)",
-  "hsl(150 18% 32%)",
-  "hsl(40 30% 70%)",
-  "hsl(210 14% 40%)",
-  "hsl(28 35% 52%)",
+  "#D4AF37",
+  "#B8962E",
+  "#8a7320",
+  "#6b5818",
+  "#caa84a",
+  "#9c8228",
+  "#e0c468",
 ];
 
 export const revenueByProperty: RevenueSlice[] = properties.map((p, i) => ({
@@ -477,33 +484,27 @@ export const revenueByProperty: RevenueSlice[] = properties.map((p, i) => ({
 // --- Tenant profile synthesis (deterministic) ----------------------------
 
 export interface Payment {
-  month: string;
+  month: Bi;
   amount: number;
   status: "Paid" | "Late" | "Outstanding";
   date: string;
 }
 
-const PAY_MONTHS = [
-  { label: "January 2026", date: "2026-01-01" },
-  { label: "February 2026", date: "2026-02-01" },
-  { label: "March 2026", date: "2026-03-01" },
-  { label: "April 2026", date: "2026-04-01" },
-  { label: "May 2026", date: "2026-05-01" },
-  { label: "June 2026", date: "2026-06-01" },
+const PAY_MONTHS: { label: Bi; date: string }[] = [
+  { label: { en: "January 2026", ar: "يناير ٢٠٢٦" }, date: "2026-01-01" },
+  { label: { en: "February 2026", ar: "فبراير ٢٠٢٦" }, date: "2026-02-01" },
+  { label: { en: "March 2026", ar: "مارس ٢٠٢٦" }, date: "2026-03-01" },
+  { label: { en: "April 2026", ar: "أبريل ٢٠٢٦" }, date: "2026-04-01" },
+  { label: { en: "May 2026", ar: "مايو ٢٠٢٦" }, date: "2026-05-01" },
+  { label: { en: "June 2026", ar: "يونيو ٢٠٢٦" }, date: "2026-06-01" },
 ];
 
 export function tenantPayments(t: Tenant): Payment[] {
   return PAY_MONTHS.map((m, i) => {
     const isCurrentMonth = i === PAY_MONTHS.length - 1;
     if (t.status === "Late" && isCurrentMonth) {
-      return {
-        month: m.label,
-        amount: t.rent,
-        status: "Outstanding",
-        date: m.date,
-      };
+      return { month: m.label, amount: t.rent, status: "Outstanding", date: m.date };
     }
-    // Late tenants paid slightly late in one prior month for realism.
     const late = t.status === "Late" && i === PAY_MONTHS.length - 3;
     return {
       month: m.label,
@@ -517,44 +518,28 @@ export function tenantPayments(t: Tenant): Payment[] {
 export interface CommLog {
   date: string;
   channel: "Email" | "Phone" | "SMS" | "Portal";
-  summary: string;
+  summary: Bi;
 }
 
 export function tenantCommLog(t: Tenant): CommLog[] {
   const base: CommLog[] = [
-    {
-      date: "2026-06-01",
-      channel: "Portal",
-      summary: "Automated rent invoice delivered for June.",
-    },
-    {
-      date: "2026-04-14",
-      channel: "Email",
-      summary: "Confirmed annual HVAC filter replacement schedule.",
-    },
+    { date: "2026-06-01", channel: "Portal", summary: { en: "Automated rent invoice delivered for June.", ar: "تم إرسال فاتورة الإيجار الآلية لشهر يونيو." } },
+    { date: "2026-04-14", channel: "Email", summary: { en: "Confirmed annual AC servicing schedule.", ar: "تم تأكيد جدول الصيانة السنوية للمكيفات." } },
   ];
   if (t.status === "Late") {
-    base.unshift({
-      date: "2026-06-21",
-      channel: "Phone",
-      summary: "Discussed past-due balance; tenant committed to pay by month end.",
-    });
+    base.unshift({ date: "2026-06-21", channel: "Phone", summary: { en: "Discussed past-due balance; tenant committed to pay by month end.", ar: "نوقش الرصيد المتأخر؛ التزم المستأجر بالسداد قبل نهاية الشهر." } });
   }
   if (t.status === "Notice Given") {
-    base.unshift({
-      date: "2026-06-05",
-      channel: "Email",
-      summary: "Received 30-day notice to vacate; turnover scheduling started.",
-    });
+    base.unshift({ date: "2026-06-05", channel: "Email", summary: { en: "Received notice to vacate; turnover scheduling started.", ar: "تم استلام إشعار الإخلاء؛ بدأ جدولة التجهيز." } });
   }
   return base;
 }
 
-export function tenantDocs(t: Tenant): { name: string; date: string }[] {
+export function tenantDocs(t: Tenant): { name: Bi; date: string }[] {
   return [
-    { name: "Signed Lease Agreement.pdf", date: t.leaseStart },
-    { name: "Move-in Inspection Report.pdf", date: t.leaseStart },
-    { name: "Security Deposit Receipt.pdf", date: t.leaseStart },
-    { name: "Renters Insurance Certificate.pdf", date: t.leaseStart },
+    { name: { en: "Signed Lease Agreement.pdf", ar: "عقد الإيجار الموقّع.pdf" }, date: t.leaseStart },
+    { name: { en: "Move-in Inspection Report.pdf", ar: "تقرير فحص الاستلام.pdf" }, date: t.leaseStart },
+    { name: { en: "Security Deposit Receipt.pdf", ar: "إيصال التأمين.pdf" }, date: t.leaseStart },
+    { name: { en: "Civil ID Copy.pdf", ar: "صورة البطاقة المدنية.pdf" }, date: t.leaseStart },
   ];
 }

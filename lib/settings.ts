@@ -19,9 +19,10 @@ export const AI_MODELS = [
 export const DEFAULT_SETTINGS: CrmSettings = {
   companyName: "Prestige Properties",
   logoUrl: "",
-  address: "210 Marina Bluffs Boulevard, Suite 400, San Diego, CA",
-  primaryColor: "#bfa181",
-  managers: "Sofia Marquez, Daniel Brooks, Marcus Lee, Priya Nair",
+  address: "Al-Hamra Tower, Floor 32, Sharq, Kuwait City",
+  primaryColor: "#B8962E",
+  managers:
+    "Abdulaziz Al-Saqr, Lulwa Al-Bahar, Yousef Al-Otaibi, Dana Al-Mutairi",
   apiKey: "",
   aiModel: "claude-sonnet-4-6",
   aiEnabled: false,

@@ -5,13 +5,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(value: number, withCents = false): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: withCents ? 2 : 0,
-    maximumFractionDigits: withCents ? 2 : 0,
-  }).format(value);
+/** Kuwaiti Dinar, whole units, "KD" symbol (Latin digits for clarity). */
+export function formatKD(value: number): string {
+  return `KD ${new Intl.NumberFormat("en-US").format(Math.round(value))}`;
+}
+
+/** Compact KD for chart axes, e.g. "KD 28k". */
+export function formatKDCompact(value: number): string {
+  return `KD ${new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value)}`;
 }
 
 export function formatCompact(value: number): string {
@@ -29,9 +33,9 @@ export function formatPercent(value: number, digits = 0): string {
   return `${value.toFixed(digits)}%`;
 }
 
-export function formatDate(iso: string): string {
+export function formatDate(iso: string, lang: "en" | "ar" = "en"): string {
   const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
+  return d.toLocaleDateString(lang === "ar" ? "ar-KW" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",

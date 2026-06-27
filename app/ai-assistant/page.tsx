@@ -9,16 +9,10 @@ import {
   propertyStats,
   tenants,
 } from "@/lib/data";
-import {
-  daysUntil,
-  formatCurrency,
-  formatPercent,
-} from "@/lib/utils";
+import { daysUntil, formatKD, formatPercent, cn } from "@/lib/utils";
 import { isAiActive } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
-import { cn } from "@/lib/utils";
-
-// --- Precompute convincing answers from the real dataset -----------------
+import { useI18n } from "@/lib/i18n";
 
 const occRanked = properties
   .map((p) => ({ name: p.name, ...propertyStats(p) }))
@@ -33,299 +27,209 @@ const expiring = tenants
   .filter((t) => t.days >= 0 && t.days <= 60)
   .sort((a, b) => a.days - b.days);
 
-const noiQuarter = properties.reduce(
-  (s, p) => s + propertyFinancials(p, 3).noi,
-  0
-);
+const noiQuarter = properties.reduce((s, p) => s + propertyFinancials(p, 3).noi, 0);
 const noiLastQuarter = Math.round(noiQuarter * 0.94);
 const noiDeltaPct = ((noiQuarter - noiLastQuarter) / noiLastQuarter) * 100;
 
-function renewalRisk(status: string): { label: string; tone: string } {
-  if (status === "Notice Given")
-    return { label: "High — notice given", tone: "text-red-600" };
-  if (status === "Late")
-    return { label: "Elevated — payment issues", tone: "text-amber-700" };
-  return { label: "Low — good standing", tone: "text-emerald-700" };
-}
-
-interface Msg {
-  role: "user" | "assistant";
-  content: React.ReactNode;
-}
-
-const DEMO: Msg[] = [
-  {
-    role: "user",
-    content: "Which properties have the lowest occupancy rate?",
-  },
-  {
-    role: "assistant",
-    content: (
-      <div className="space-y-2">
-        <p>
-          Here are the three properties with the lowest occupancy right now:
-        </p>
-        <ol className="space-y-1.5">
-          {occRanked.map((p, i) => (
-            <li key={p.name} className="flex items-baseline gap-2">
-              <span className="font-semibold text-gold-dark">{i + 1}.</span>
-              <span className="flex-1">
-                <span className="font-medium">{p.name}</span> —{" "}
-                {formatPercent(p.occupancyRate)} occupancy ({p.unitsVacant} of{" "}
-                {p.unitsTotal} units vacant)
-              </span>
-            </li>
-          ))}
-        </ol>
-        <p className="text-charcoal/70">
-          {occRanked[0].name} is the priority — I&apos;d recommend prioritizing
-          turnover and re-listing there to recover the lost rent.
-        </p>
-      </div>
-    ),
-  },
-  {
-    role: "user",
-    content: "How much rent is overdue across all properties?",
-  },
-  {
-    role: "assistant",
-    content: (
-      <div className="space-y-2">
-        <p>
-          Total outstanding rent across the portfolio is{" "}
-          <span className="font-semibold text-red-600">
-            {formatCurrency(overdueTotal)}
-          </span>{" "}
-          from {overdue.length} tenants:
-        </p>
-        <ul className="space-y-1">
-          {overdue.map((t) => (
-            <li key={t.id} className="flex justify-between gap-3">
-              <span>
-                {t.name}{" "}
-                <span className="text-charcoal/60">
-                  ({t.propertyName} · {t.unit})
-                </span>
-              </span>
-              <span className="font-medium text-red-600">
-                {formatCurrency(t.balanceOwed)}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="text-charcoal/70">
-          {overdue[0]?.name} carries the largest balance. Want me to draft
-          reminder notices for these accounts?
-        </p>
-      </div>
-    ),
-  },
-  {
-    role: "user",
-    content: "Which leases are expiring in the next 60 days?",
-  },
-  {
-    role: "assistant",
-    content: (
-      <div className="space-y-2">
-        <p>
-          {expiring.length} leases are expiring within 60 days. Ranked by
-          renewal risk:
-        </p>
-        <ul className="space-y-1.5">
-          {expiring.map((t) => {
-            const risk = renewalRisk(t.status);
-            return (
-              <li key={t.id} className="flex flex-wrap items-baseline gap-x-2">
-                <span className="font-medium">{t.name}</span>
-                <span className="text-charcoal/60">
-                  {t.propertyName} · {t.unit}
-                </span>
-                <span className="text-charcoal/70">· {t.days} days</span>
-                <span className={cn("text-xs", risk.tone)}>
-                  · {risk.label}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-        <p className="text-charcoal/70">
-          I&apos;d start renewal conversations with the good-standing tenants
-          first and prepare turnover plans for the high-risk units.
-        </p>
-      </div>
-    ),
-  },
-  {
-    role: "user",
-    content: "What's our NOI compared to last quarter?",
-  },
-  {
-    role: "assistant",
-    content: (
-      <div className="space-y-2">
-        <p>Net Operating Income, quarter over quarter:</p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-md border border-border bg-secondary/40 p-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              Last Quarter
-            </p>
-            <p className="font-serif text-xl text-charcoal">
-              {formatCurrency(noiLastQuarter)}
-            </p>
-          </div>
-          <div className="rounded-md border border-gold/40 bg-gold-light p-3">
-            <p className="text-xs uppercase tracking-wide text-gold-dark">
-              This Quarter
-            </p>
-            <p className="font-serif text-xl text-charcoal">
-              {formatCurrency(noiQuarter)}
-            </p>
-          </div>
-        </div>
-        <p className="text-charcoal/70">
-          That&apos;s an increase of{" "}
-          <span className="font-semibold text-emerald-700">
-            +{noiDeltaPct.toFixed(1)}%
-          </span>
-          , driven mainly by reduced vacancy loss and stable operating
-          expenses across the residential portfolio.
-        </p>
-      </div>
-    ),
-  },
-];
-
 export default function AiAssistantPage() {
+  const { t, lang } = useI18n();
   const { settings, hydrated } = useSettings();
   const active = hydrated && isAiActive(settings);
-
-  const [messages, setMessages] = useState<Msg[]>(DEMO);
+  const [asked, setAsked] = useState<string[]>([]);
   const [input, setInput] = useState("");
+
+  function risk(status: string) {
+    if (status === "Notice Given") return { label: t("risk_high"), tone: "text-red-600" };
+    if (status === "Late") return { label: t("risk_elevated"), tone: "text-amber-700" };
+    return { label: t("risk_low"), tone: "text-emerald-700" };
+  }
+
+  const demo: { role: "user" | "assistant"; node: React.ReactNode }[] = [
+    { role: "user", node: t("q_occupancy") },
+    {
+      role: "assistant",
+      node: (
+        <div className="space-y-2">
+          <p>{t("a_occ_intro")}</p>
+          <ol className="space-y-1.5">
+            {occRanked.map((p, i) => (
+              <li key={p.name.en} className="flex items-baseline gap-2">
+                <span className="font-semibold text-gold-dark">{i + 1}.</span>
+                <span className="flex-1">
+                  <span className="font-medium">{p.name[lang]}</span> — {formatPercent(p.occupancyRate)} ({p.unitsVacant} {t("a_occ_unitsVacant")})
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p className="text-charcoal/70">
+            <span className="font-medium">{occRanked[0].name[lang]}</span> {t("a_occ_outro")}
+          </p>
+        </div>
+      ),
+    },
+    { role: "user", node: t("q_overdue") },
+    {
+      role: "assistant",
+      node: (
+        <div className="space-y-2">
+          <p>
+            {t("a_overdue_intro1")} <span className="font-semibold text-red-600">{formatKD(overdueTotal)}</span> {t("a_overdue_intro2")} {overdue.length} {t("a_overdue_tenants")}
+          </p>
+          <ul className="space-y-1">
+            {overdue.map((tn) => (
+              <li key={tn.id} className="flex justify-between gap-3">
+                <span>{tn.name[lang]} <span className="text-charcoal/60">({tn.propertyName[lang]} · {tn.unit})</span></span>
+                <span className="tnum text-red-600">{formatKD(tn.balanceOwed)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-charcoal/70"><span className="font-medium">{overdue[0]?.name[lang]}</span> {t("a_overdue_outro")}</p>
+        </div>
+      ),
+    },
+    { role: "user", node: t("q_expiring") },
+    {
+      role: "assistant",
+      node: (
+        <div className="space-y-2">
+          <p>{expiring.length} {t("a_exp_intro1")}</p>
+          <ul className="space-y-1.5">
+            {expiring.map((tn) => {
+              const r = risk(tn.status);
+              return (
+                <li key={tn.id} className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="font-medium">{tn.name[lang]}</span>
+                  <span className="text-charcoal/60">{tn.propertyName[lang]} · {tn.unit}</span>
+                  <span className="text-charcoal/70">· {tn.days} {t("days")}</span>
+                  <span className={cn("text-xs", r.tone)}>· {r.label}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="text-charcoal/70">{t("a_exp_outro")}</p>
+        </div>
+      ),
+    },
+    { role: "user", node: t("q_noi") },
+    {
+      role: "assistant",
+      node: (
+        <div className="space-y-2">
+          <p>{t("a_noi_intro")}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-md border border-border bg-secondary/50 p-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("lastQuarter")}</p>
+              <p className="font-serif text-xl text-charcoal">{formatKD(noiLastQuarter)}</p>
+            </div>
+            <div className="rounded-md border border-gold/40 bg-gold-light p-3">
+              <p className="text-xs uppercase tracking-wide text-gold-dark">{t("thisQuarter")}</p>
+              <p className="font-serif text-xl text-charcoal">{formatKD(noiQuarter)}</p>
+            </div>
+          </div>
+          <p className="text-charcoal/70">{t("a_noi_outro1")} <span className="font-semibold text-emerald-700">+{noiDeltaPct.toFixed(1)}%</span>{t("a_noi_outro2")}</p>
+        </div>
+      ),
+    },
+  ];
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!input.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: input.trim() },
-      {
-        role: "assistant",
-        content: active ? (
-          <p>
-            This is a demonstration build, so I&apos;m showing sample answers
-            rather than calling the live model. With a connected key, I&apos;d
-            analyze your live portfolio data to answer that.
-          </p>
-        ) : (
-          <p>
-            Connect your Anthropic API key in{" "}
-            <Link href="/settings" className="text-gold-dark underline">
-              Settings
-            </Link>{" "}
-            to activate live responses.
-          </p>
-        ),
-      },
-    ]);
+    setAsked((p) => [...p, input.trim()]);
     setInput("");
   }
 
   return (
     <div className="mx-auto max-w-3xl">
-      {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-charcoal text-gold">
             <Sparkles className="h-6 w-6" />
           </span>
           <div>
-            <h1 className="font-serif text-2xl text-charcoal">
-              Prestige AI Agent
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Portfolio intelligence for your team
-            </p>
+            <h1 className="text-2xl text-charcoal">{t("aiAgent")}</h1>
+            <p className="text-sm text-muted-foreground">{t("aiSubtitle")}</p>
           </div>
         </div>
         {active ? (
           <span className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            Active · {settings.aiModel}
+            {t("active")} · {settings.aiModel}
           </span>
         ) : (
           <span className="inline-flex items-center gap-2 self-start rounded-full bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
             <Lock className="h-3.5 w-3.5" />
-            Add API Key to Activate
+            {t("addApiKey")}
           </span>
         )}
       </div>
 
-      {/* Chat */}
       <div className="rounded-xl border border-border bg-card shadow-sm">
         <div className="space-y-5 p-5 sm:p-6">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={cn(
-                "flex",
-                m.role === "user" ? "justify-end" : "justify-start"
-              )}
-            >
-              {m.role === "assistant" && (
-                <span className="mr-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-charcoal text-gold">
-                  <Sparkles className="h-4 w-4" />
-                </span>
-              )}
-              <div
-                className={cn(
-                  "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                  m.role === "user"
-                    ? "rounded-br-sm bg-charcoal text-white"
-                    : "rounded-bl-sm bg-secondary text-charcoal"
+          {demo.map((m, i) => (
+            <Bubble key={`d${i}`} role={m.role}>{m.node}</Bubble>
+          ))}
+          {asked.map((q, i) => (
+            <div key={`a${i}`} className="space-y-5">
+              <Bubble role="user">{q}</Bubble>
+              <Bubble role="assistant">
+                {active ? (
+                  <p>{t("demoNote")}</p>
+                ) : (
+                  <p>
+                    {t("connectBanner")}{" "}
+                    <Link href="/settings" className="text-gold-dark underline">
+                      {t("nav_settings")}
+                    </Link>
+                  </p>
                 )}
-              >
-                {m.content}
-              </div>
+              </Bubble>
             </div>
           ))}
         </div>
 
-        {/* Composer */}
-        <form
-          onSubmit={onSubmit}
-          className="flex items-center gap-2 border-t border-border p-4"
-        >
+        <form onSubmit={onSubmit} className="flex items-center gap-2 border-t border-border p-4">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about your portfolio..."
+            placeholder={t("askPortfolio")}
             className="flex-1 rounded-md border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
-          <button
-            type="submit"
-            className="flex h-10 w-10 items-center justify-center rounded-md bg-gold text-charcoal transition-colors hover:bg-gold-dark hover:text-white"
-            aria-label="Send"
-          >
+          <button type="submit" className="flex h-10 w-10 items-center justify-center rounded-md bg-gold text-charcoal transition-colors hover:bg-gold-dark hover:text-white" aria-label={t("askAi")}>
             <Send className="h-4 w-4" />
           </button>
         </form>
       </div>
 
-      {/* Banner */}
       {!active && (
         <div className="mt-4 flex items-center gap-3 rounded-lg border border-gold/40 bg-gold-light px-4 py-3 text-sm text-charcoal">
           <Lock className="h-4 w-4 shrink-0 text-gold-dark" />
           <span>
-            Connect your API key in{" "}
-            <Link href="/settings" className="font-medium text-gold-dark underline">
-              Settings
-            </Link>{" "}
-            to activate live responses.
+            {t("connectBanner")}{" "}
+            <Link href="/settings" className="font-medium text-gold-dark underline">{t("nav_settings")}</Link>
           </span>
         </div>
       )}
+    </div>
+  );
+}
+
+function Bubble({ role, children }: { role: "user" | "assistant"; children: React.ReactNode }) {
+  return (
+    <div className={cn("flex", role === "user" ? "justify-end" : "justify-start")}>
+      {role === "assistant" && (
+        <span className="me-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-charcoal text-gold">
+          <Sparkles className="h-4 w-4" />
+        </span>
+      )}
+      <div
+        className={cn(
+          "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+          role === "user" ? "rounded-br-sm bg-charcoal text-white" : "rounded-bl-sm bg-secondary text-charcoal"
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 }

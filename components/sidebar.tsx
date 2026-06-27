@@ -16,27 +16,30 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/use-settings";
 import { isAiActive } from "@/lib/settings";
+import { LanguageToggle } from "@/components/language-toggle";
 
 const NAV = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/properties", label: "Properties", icon: Building2 },
-  { href: "/tenants", label: "Tenants", icon: Users },
-  { href: "/vacancies", label: "Vacancies", icon: DoorOpen },
-  { href: "/financials", label: "Financials", icon: Receipt },
-  { href: "/maintenance", label: "Maintenance", icon: Wrench },
-  { href: "/ai-assistant", label: "AI Assistant", icon: Sparkles, ai: true },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/", key: "nav_dashboard", icon: LayoutDashboard },
+  { href: "/properties", key: "nav_properties", icon: Building2 },
+  { href: "/tenants", key: "nav_tenants", icon: Users },
+  { href: "/vacancies", key: "nav_vacancies", icon: DoorOpen },
+  { href: "/financials", key: "nav_financials", icon: Receipt },
+  { href: "/maintenance", key: "nav_maintenance", icon: Wrench },
+  { href: "/ai-assistant", key: "nav_ai", icon: Sparkles, ai: true },
+  { href: "/settings", key: "nav_settings", icon: Settings },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const { settings } = useSettings();
   const aiActive = isAiActive(settings);
 
   return (
-    <nav className="flex flex-col gap-1 px-3">
+    <nav className="flex flex-col gap-0.5 px-3">
       {NAV.map((item) => {
         const active =
           item.href === "/"
@@ -49,26 +52,28 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             href={item.href}
             onClick={onNavigate}
             className={cn(
-              "group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+              "group relative flex items-center gap-3 rounded-md py-2.5 ps-4 pe-3 text-sm transition-colors",
               active
-                ? "bg-white/10 text-white"
-                : "text-white/60 hover:bg-white/5 hover:text-white"
+                ? "bg-white/[0.06] text-white"
+                : "text-white/55 hover:bg-white/[0.04] hover:text-white"
             )}
           >
+            {active && (
+              <span className="absolute inset-y-1.5 start-0 w-0.5 rounded-full bg-gold" />
+            )}
             <Icon
               className={cn(
                 "h-[18px] w-[18px] shrink-0",
-                active ? "text-gold" : "text-white/50 group-hover:text-gold"
+                active ? "text-gold" : "text-white/45 group-hover:text-white"
               )}
             />
-            <span className="flex-1">{item.label}</span>
+            <span className="flex-1">{t(item.key)}</span>
             {item.ai && (
               <span
                 className={cn(
-                  "h-2 w-2 rounded-full",
+                  "h-1.5 w-1.5 rounded-full",
                   aiActive ? "bg-emerald-400" : "bg-white/25"
                 )}
-                title={aiActive ? "Active" : "Inactive"}
               />
             )}
           </Link>
@@ -79,6 +84,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function Brand() {
+  const { t } = useI18n();
   const { settings } = useSettings();
   return (
     <div className="flex items-center gap-3 px-6 py-6">
@@ -99,7 +105,7 @@ function Brand() {
           {settings.companyName || "Prestige"}
         </p>
         <p className="text-[0.6rem] uppercase tracking-[0.3em] text-gold">
-          Property CRM
+          {t("brandTagline")}
         </p>
       </div>
     </div>
@@ -107,31 +113,33 @@ function Brand() {
 }
 
 export function Sidebar() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-charcoal lg:flex">
+      <aside className="fixed inset-y-0 start-0 z-30 hidden w-64 flex-col bg-charcoal lg:flex">
         <Brand />
         <NavLinks />
         <div className="mt-auto px-6 py-5">
-          <p className="text-[0.65rem] text-white/30">
-            Demo environment · fictional data
-          </p>
+          <p className="text-[0.65rem] text-white/30">{t("demoEnv")}</p>
         </div>
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-charcoal px-4 lg:hidden">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-charcoal px-4 lg:hidden">
         <Brand />
-        <button
-          onClick={() => setOpen(true)}
-          aria-label="Open menu"
-          className="text-white"
-        >
-          <Menu className="h-6 w-6" />
-        </button>
+        <div className="flex items-center gap-3">
+          <LanguageToggle dark />
+          <button
+            onClick={() => setOpen(true)}
+            aria-label="Open menu"
+            className="text-white"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+        </div>
       </header>
 
       {/* Mobile drawer */}
@@ -141,8 +149,8 @@ export function Sidebar() {
             className="absolute inset-0 bg-black/50"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-charcoal">
-            <div className="flex items-center justify-between pr-4">
+          <div className="absolute inset-y-0 start-0 flex w-72 flex-col bg-charcoal">
+            <div className="flex items-center justify-between pe-4">
               <Brand />
               <button
                 onClick={() => setOpen(false)}

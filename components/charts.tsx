@@ -1,260 +1,195 @@
-import { formatCompact, formatCurrency } from "@/lib/utils";
+"use client";
 
-// --- Bar chart (revenue by month) ----------------------------------------
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart as RBarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { formatKD, formatKDCompact } from "@/lib/utils";
 
-export function BarChart({
-  data,
-  labels,
+const AXIS = { fontSize: 11, fill: "hsl(var(--muted-foreground))" };
+const GRID = "hsl(var(--border))";
+
+function TooltipBox({
+  title,
+  value,
 }: {
-  data: number[];
-  labels: string[];
+  title: string;
+  value: string;
 }) {
-  const W = 720;
-  const H = 240;
-  const pad = { top: 16, right: 8, bottom: 28, left: 48 };
-  const cw = W - pad.left - pad.right;
-  const ch = H - pad.top - pad.bottom;
-  const max = Math.max(...data) * 1.1;
-  const barW = (cw / data.length) * 0.6;
-  const gap = (cw / data.length) * 0.4;
-
-  const ticks = 4;
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      className="h-auto w-full"
-      role="img"
-      aria-label="Revenue by month"
-    >
-      {Array.from({ length: ticks + 1 }).map((_, i) => {
-        const y = pad.top + (ch / ticks) * i;
-        const val = max - (max / ticks) * i;
-        return (
-          <g key={i}>
-            <line
-              x1={pad.left}
-              x2={W - pad.right}
-              y1={y}
-              y2={y}
-              stroke="hsl(var(--border))"
-              strokeWidth={1}
-            />
-            <text
-              x={pad.left - 8}
-              y={y + 4}
-              textAnchor="end"
-              className="fill-muted-foreground"
-              fontSize={10}
-            >
-              ${formatCompact(val)}
-            </text>
-          </g>
-        );
-      })}
-      {data.map((v, i) => {
-        const h = (v / max) * ch;
-        const x = pad.left + (cw / data.length) * i + gap / 2;
-        const y = pad.top + ch - h;
-        return (
-          <g key={i}>
-            <rect
-              x={x}
-              y={y}
-              width={barW}
-              height={h}
-              rx={3}
-              fill="hsl(var(--gold))"
-            />
-            <text
-              x={x + barW / 2}
-              y={H - 10}
-              textAnchor="middle"
-              className="fill-muted-foreground"
-              fontSize={10}
-            >
-              {labels[i]}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
+    <div className="rounded-md border border-border bg-card px-3 py-2 text-xs shadow-md">
+      <p className="text-muted-foreground">{title}</p>
+      <p className="font-serif text-sm text-charcoal">{value}</p>
+    </div>
   );
 }
 
-// --- Line chart (occupancy trend) ----------------------------------------
+// --- Revenue by month (bar) ----------------------------------------------
 
-export function LineChart({
+export function RevenueBarChart({
   data,
   labels,
+  seriesLabel,
 }: {
   data: number[];
   labels: string[];
+  seriesLabel: string;
 }) {
-  const W = 720;
-  const H = 240;
-  const pad = { top: 16, right: 12, bottom: 28, left: 40 };
-  const cw = W - pad.left - pad.right;
-  const ch = H - pad.top - pad.bottom;
-  const min = Math.min(...data) - 3;
-  const max = Math.max(...data) + 2;
-  const span = max - min || 1;
-
-  const pt = (v: number, i: number) => {
-    const x = pad.left + (cw / (data.length - 1)) * i;
-    const y = pad.top + ch - ((v - min) / span) * ch;
-    return [x, y] as const;
-  };
-
-  const line = data.map((v, i) => pt(v, i).join(",")).join(" ");
-  const [, firstY] = pt(data[0], 0);
-  const area = `${pad.left},${pad.top + ch} ${line} ${pad.left + cw},${
-    pad.top + ch
-  }`;
-  void firstY;
-
-  const ticks = 4;
+  const rows = data.map((v, i) => ({ name: labels[i], value: v }));
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      className="h-auto w-full"
-      role="img"
-      aria-label="Occupancy trend"
-    >
-      <defs>
-        <linearGradient id="occFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="hsl(var(--gold))" stopOpacity={0.28} />
-          <stop offset="100%" stopColor="hsl(var(--gold))" stopOpacity={0} />
-        </linearGradient>
-      </defs>
-      {Array.from({ length: ticks + 1 }).map((_, i) => {
-        const y = pad.top + (ch / ticks) * i;
-        const val = max - (span / ticks) * i;
-        return (
-          <g key={i}>
-            <line
-              x1={pad.left}
-              x2={W - pad.right}
-              y1={y}
-              y2={y}
-              stroke="hsl(var(--border))"
-              strokeWidth={1}
-            />
-            <text
-              x={pad.left - 8}
-              y={y + 4}
-              textAnchor="end"
-              className="fill-muted-foreground"
-              fontSize={10}
-            >
-              {Math.round(val)}%
-            </text>
-          </g>
-        );
-      })}
-      <polygon points={area} fill="url(#occFill)" />
-      <polyline
-        points={line}
-        fill="none"
-        stroke="hsl(var(--gold-dark))"
-        strokeWidth={2.5}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-      {data.map((v, i) => {
-        const [x, y] = pt(v, i);
-        return (
-          <g key={i}>
-            <circle cx={x} cy={y} r={3} fill="hsl(var(--gold-dark))" />
-            <text
-              x={x}
-              y={H - 10}
-              textAnchor="middle"
-              className="fill-muted-foreground"
-              fontSize={10}
-            >
-              {labels[i]}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
+    <div dir="ltr" className="w-full">
+      <ResponsiveContainer width="100%" height={260}>
+        <RBarChart data={rows} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+          <CartesianGrid vertical={false} stroke={GRID} />
+          <XAxis dataKey="name" tickLine={false} axisLine={false} tick={AXIS} />
+          <YAxis
+            tickFormatter={(v) => formatKDCompact(Number(v))}
+            tickLine={false}
+            axisLine={false}
+            width={64}
+            tick={AXIS}
+          />
+          <Tooltip
+            cursor={{ fill: "hsl(var(--muted))" }}
+            content={({ active, payload, label }) =>
+              active && payload?.length ? (
+                <TooltipBox
+                  title={`${seriesLabel} · ${label}`}
+                  value={formatKD(Number(payload[0].value))}
+                />
+              ) : null
+            }
+          />
+          <Bar
+            dataKey="value"
+            fill="hsl(var(--gold))"
+            radius={[4, 4, 0, 0]}
+            maxBarSize={34}
+          />
+        </RBarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
-// --- Donut chart (revenue by property) -----------------------------------
+// --- Occupancy trend (area) ----------------------------------------------
 
-function polar(cx: number, cy: number, r: number, angle: number) {
-  const a = ((angle - 90) * Math.PI) / 180;
-  return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const;
+export function OccupancyAreaChart({
+  data,
+  labels,
+  seriesLabel,
+}: {
+  data: number[];
+  labels: string[];
+  seriesLabel: string;
+}) {
+  const rows = data.map((v, i) => ({ name: labels[i], value: v }));
+  const min = Math.floor(Math.min(...data) - 3);
+  const max = Math.min(100, Math.ceil(Math.max(...data) + 2));
+  return (
+    <div dir="ltr" className="w-full">
+      <ResponsiveContainer width="100%" height={260}>
+        <AreaChart data={rows} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+          <defs>
+            <linearGradient id="occGold" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--gold))" stopOpacity={0.25} />
+              <stop offset="100%" stopColor="hsl(var(--gold))" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid vertical={false} stroke={GRID} />
+          <XAxis dataKey="name" tickLine={false} axisLine={false} tick={AXIS} />
+          <YAxis
+            domain={[min, max]}
+            tickFormatter={(v) => `${v}%`}
+            tickLine={false}
+            axisLine={false}
+            width={44}
+            tick={AXIS}
+          />
+          <Tooltip
+            content={({ active, payload, label }) =>
+              active && payload?.length ? (
+                <TooltipBox
+                  title={`${seriesLabel} · ${label}`}
+                  value={`${payload[0].value}%`}
+                />
+              ) : null
+            }
+          />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke="hsl(var(--gold-dark))"
+            strokeWidth={2.5}
+            fill="url(#occGold)"
+            dot={{ r: 2.5, fill: "hsl(var(--gold-dark))", strokeWidth: 0 }}
+            activeDot={{ r: 4 }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
 
-function arcPath(
-  cx: number,
-  cy: number,
-  r: number,
-  rInner: number,
-  start: number,
-  end: number
-) {
-  const [sx, sy] = polar(cx, cy, r, end);
-  const [ex, ey] = polar(cx, cy, r, start);
-  const [isx, isy] = polar(cx, cy, rInner, end);
-  const [iex, iey] = polar(cx, cy, rInner, start);
-  const large = end - start > 180 ? 1 : 0;
-  return [
-    `M ${sx} ${sy}`,
-    `A ${r} ${r} 0 ${large} 0 ${ex} ${ey}`,
-    `L ${iex} ${iey}`,
-    `A ${rInner} ${rInner} 0 ${large} 1 ${isx} ${isy}`,
-    "Z",
-  ].join(" ");
-}
+// --- Revenue by property (donut + legend) --------------------------------
 
-export function DonutChart({
+export function RevenueDonut({
   slices,
+  centerLabel,
 }: {
   slices: { name: string; value: number; color: string }[];
+  centerLabel: string;
 }) {
-  const total = slices.reduce((s, x) => s + x.value, 0) || 1;
-  const cx = 90;
-  const cy = 90;
-  const r = 84;
-  const rInner = 52;
-  let angle = 0;
-
+  const total = slices.reduce((s, x) => s + x.value, 0);
   return (
-    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
-      <svg
-        viewBox="0 0 180 180"
-        className="h-44 w-44 shrink-0"
-        role="img"
-        aria-label="Revenue by property"
-      >
-        {slices.map((s) => {
-          const sweep = (s.value / total) * 360;
-          const path = arcPath(cx, cy, r, rInner, angle, angle + sweep);
-          angle += sweep;
-          return <path key={s.name} d={path} fill={s.color} />;
-        })}
-        <text
-          x={cx}
-          y={cy - 4}
-          textAnchor="middle"
-          className="fill-charcoal font-serif"
-          fontSize={18}
-        >
-          ${formatCompact(total)}
-        </text>
-        <text
-          x={cx}
-          y={cy + 14}
-          textAnchor="middle"
-          className="fill-muted-foreground"
-          fontSize={9}
-        >
-          / month
-        </text>
-      </svg>
+    <div className="flex flex-col items-center gap-6 sm:flex-row">
+      <div dir="ltr" className="relative h-44 w-44 shrink-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={slices}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={56}
+              outerRadius={84}
+              paddingAngle={1.5}
+              stroke="none"
+            >
+              {slices.map((s) => (
+                <Cell key={s.name} fill={s.color} />
+              ))}
+            </Pie>
+            <Tooltip
+              content={({ active, payload }) =>
+                active && payload?.length ? (
+                  <TooltipBox
+                    title={String(payload[0].name)}
+                    value={formatKD(Number(payload[0].value))}
+                  />
+                ) : null
+              }
+            />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-serif text-lg text-charcoal">
+            {formatKD(total)}
+          </span>
+          <span className="text-[0.65rem] text-muted-foreground">
+            {centerLabel}
+          </span>
+        </div>
+      </div>
 
       <ul className="grid w-full gap-2 text-sm">
         {slices.map((s) => (
@@ -264,9 +199,7 @@ export function DonutChart({
               style={{ background: s.color }}
             />
             <span className="flex-1 truncate text-charcoal/80">{s.name}</span>
-            <span className="font-medium text-charcoal">
-              {formatCurrency(s.value)}
-            </span>
+            <span className="tnum text-charcoal">{formatKD(s.value)}</span>
           </li>
         ))}
       </ul>

@@ -22,14 +22,16 @@ export function ThemeProvider() {
     }
     const [h, s, l] = parts.split(" ");
     const lNum = parseInt(l);
+    const sNum = parseInt(s);
     root.style.setProperty("--gold", parts);
     root.style.setProperty(
       "--gold-dark",
-      `${h} ${s} ${Math.max(lNum - 14, 12)}%`
+      `${h} ${s} ${Math.max(lNum - 8, 20)}%`
     );
+    // Always a pale tint for badges/icon backgrounds, regardless of accent.
     root.style.setProperty(
       "--gold-light",
-      `${h} ${s} ${Math.min(lNum + 28, 92)}%`
+      `${h} ${Math.min(sNum, 55)}% 93%`
     );
     root.style.setProperty("--ring", parts);
     root.style.setProperty("--accent", parts);
